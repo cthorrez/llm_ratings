@@ -12,7 +12,7 @@ from sklearn.linear_model import LogisticRegression
 def compute_elo(battles, K=4, SCALE=400, BASE=10, INIT_RATING=1000):
     rating = defaultdict(lambda: INIT_RATING)
 
-    for rd, model_a, model_b, winner in battles[['model_a', 'model_b', 'winner']].itertuples():
+    for _, model_a, model_b, winner in battles[['model_a', 'model_b', 'winner']].itertuples():
         ra = rating[model_a]
         rb = rating[model_b]
         ea = 1 / (1 + BASE ** ((rb - ra) / SCALE))
@@ -47,7 +47,14 @@ def predict_win_rate(elo_ratings, SCALE=400, BASE=10, INIT_RATING=1000):
     df = pd.DataFrame(data, index=names)
     df.index.name = "model_a"
     df.columns.name = "model_b"
-    return df.T
+    return df.T, wins
+
+def predict_probs(df, pred_win_rates, SCALE=400, BASE=10, INIT_RATING=1000):
+    probs = np.zeros(len(df))
+    for idx, model_a, model_b in df[['model_a', 'model_b']].itertuples():
+        prob = pred_win_rates[model_a][model_b]
+        probs[idx] = prob
+    return probs
 
 def compute_elo_mle(df, SCALE=400, BASE=10, INIT_RATING=1000):
     models = pd.concat([df["model_a"], df["model_b"]]).unique()
