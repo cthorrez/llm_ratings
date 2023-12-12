@@ -56,9 +56,13 @@ def predict_probs(df, pred_win_rates, SCALE=400, BASE=10, INIT_RATING=1000):
         probs[idx] = prob
     return probs
 
-def compute_elo_mle(df, SCALE=400, BASE=10, INIT_RATING=1000):
+def compute_mle_elo(df, SCALE=400, BASE=10, INIT_RATING=1000):
+    from sklearn.linear_model import LogisticRegression
     models = pd.concat([df["model_a"], df["model_b"]]).unique()
     models = pd.Series(np.arange(len(models)), index=models)
+
+    # duplicate battles
+    df = pd.concat([df, df], ignore_index=True)
     p = len(models.index)
     n = df.shape[0]
 
@@ -66,8 +70,15 @@ def compute_elo_mle(df, SCALE=400, BASE=10, INIT_RATING=1000):
     X[np.arange(n), models[df["model_a"]]] = +math.log(BASE)
     X[np.arange(n), models[df["model_b"]]] = -math.log(BASE)
 
+    # one A win => two A win
     Y = np.zeros(n)
     Y[df["winner"] == "model_a"] = 1.0
+
+    # one tie => one A win + one B win
+    # find tie + tie (both bad) index
+    tie_idx = (df["winner"] == "tie") | (df["winner"] == "tie (bothbad)")
+    tie_idx[len(tie_idx)//2:] = False
+    Y[tie_idx] = 1.0
 
     lr = LogisticRegression(fit_intercept=False)
     lr.fit(X,Y)

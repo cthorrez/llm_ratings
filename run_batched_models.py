@@ -22,23 +22,23 @@ def main():
     matchups = dataset.matchups
     outcomes = dataset.outcomes
 
-    # fit_ratings = minimize(
-    #     fun=bt_loss_and_grad,
-    #     x0=ratings,
-    #     args = (matchups, outcomes),
-    #     method='L-BFGS-B',
-    #     jac=True,
-    #     hessp=bt_hess_vec_prod,
-    #     options={'disp' : True}
-    # )
-    # print(fit_ratings)
-    # fit_ratings = fit_ratings['x']
-
-    fit_ratings = diag_hess_newtons_method(
+    fit_ratings = minimize(
+        fun=bt_loss_and_grad,
         x0=ratings,
-        f_grad_hess=bt_f_grad_hess,
-        args={'matchups' : matchups, 'outcomes': outcomes},
+        args = (matchups, outcomes),
+        method='L-BFGS-B',
+        jac=True,
+        hessp=bt_hess_vec_prod,
+        options={'disp' : True}
     )
+    print(fit_ratings)
+    fit_ratings = fit_ratings['x']
+
+    # fit_ratings = diag_hess_newtons_method(
+    #     x0=ratings,
+    #     f_grad_hess=bt_f_grad_hess,
+    #     args={'matchups' : matchups, 'outcomes': outcomes},
+    # )
 
     idxs = np.argsort(-fit_ratings)
     for idx in range(idxs.shape[0]):
