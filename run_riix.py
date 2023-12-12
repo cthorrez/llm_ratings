@@ -7,10 +7,9 @@ from riix.utils.data_utils import RatingDataset
 from riix.eval import evaluate
 
 def main():
-    chat_dataset = load_dataset("lmsys/chatbot_arena_conversations")
-    matches = pd.DataFrame(chat_dataset['train']).sort_values(ascending=True, by=["tstamp"])
+    matches = pd.read_json('clean_battle_anony_20231206.json')
     matches['outcome'] = matches['winner'].map({'model_a': 1.0, 'model_b': 0.0}).fillna(0.5)
-    matches = matches[~matches["winner"].str.contains("tie")].reset_index()
+    # matches = matches[~matches["winner"].str.contains("tie")].reset_index()
 
     dataset = RatingDataset(
         df=matches,

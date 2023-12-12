@@ -1,4 +1,5 @@
 pandas
+gdown
 huggingface_hub[cli]
 datasets
 scikit-learn
