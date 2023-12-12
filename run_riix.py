@@ -17,15 +17,26 @@ def main():
         competitor_cols=['model_a', 'model_b'],
         outcome_col='outcome',
         timestamp_col='tstamp',
-        rating_period='0.01D',
+        batch_size=1,
     )
 
     elo_model = Elo(
         num_competitors=dataset.num_competitors,
-        update_method='iterative'
+        update_method='batched'
     )
     elo_metrics = evaluate(elo_model, dataset)
     print(elo_metrics)
+
+    glicko_model = Glicko(
+        num_competitors=dataset.num_competitors,
+        update_method='batched',
+        c = 0.0 # no reason to increase variance over time for static models
+    )
+    glicko_metrics = evaluate(glicko_model, dataset)
+    print(glicko_metrics)
+
+
+
 
     
 
