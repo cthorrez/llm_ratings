@@ -1,10 +1,19 @@
+import math
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
+from scipy.special import expit
 from sklearn.utils.optimize import _newton_cg
 from riix.utils.data_utils import RatingDataset
+from riix.metrics import binary_metrics_suite
 from models import bt_loss_and_grad, bt_hess_vec_prod, bt_f_grad_hess
 from opt import diag_hess_newtons_method
+
+
+def calc_probs_bt(matchups, ratings, alpha=math.log(10.0) /  400.):
+    all_ratings = ratings[matchups]
+    probs = expit(alpha * (all_ratings[:,0] - all_ratings[:,1]))
+    return probs
 
 def main():
     matches = pd.read_json('clean_battle_anony_20231206.json')
@@ -29,9 +38,9 @@ def main():
         method='L-BFGS-B',
         jac=True,
         hessp=bt_hess_vec_prod,
-        options={'disp' : True}
+        options={'disp' : False}
     )
-    print(fit_ratings)
+    # print(fit_ratings)
     fit_ratings = fit_ratings['x']
 
     # fit_ratings = diag_hess_newtons_method(
@@ -39,10 +48,13 @@ def main():
     #     f_grad_hess=bt_f_grad_hess,
     #     args={'matchups' : matchups, 'outcomes': outcomes},
     # )
+    # idxs = np.argsort(-fit_ratings)
+    # for idx in range(idxs.shape[0]):
+    #     print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{fit_ratings[idxs[idx]]}')
 
-    idxs = np.argsort(-fit_ratings)
-    for idx in range(idxs.shape[0]):
-        print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{fit_ratings[idxs[idx]]}')
+    probs = calc_probs_bt(matchups, fit_ratings)
+    metrics = binary_metrics_suite(probs, outcomes)
+    print(f'{metrics=}')
 
 if __name__ == '__main__':
     main()

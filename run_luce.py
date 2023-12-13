@@ -6,7 +6,7 @@ from datasets import load_dataset
 from riix.utils.data_utils import RatingDataset
 from riix.eval import evaluate
 from riix.metrics import binary_metrics_suite
-from luce import wlsr_ties, mm_ties
+from luce import wlsr_ties, mm_ties, ilsr_ties
 
 def preprocess_for_luce(matchups, outcomes):
     draw_mask = outcomes == 0.5
@@ -16,7 +16,7 @@ def preprocess_for_luce(matchups, outcomes):
     comparisons[swap_mask,:] = comparisons[swap_mask,::-1] # winner has to be first
     return comparisons, ties
 
-def postprocess_from_luce(matchups, ratings):
+def calc_probs_bt(matchups, ratings):
     all_ratings = ratings[matchups]
     probs = expit(all_ratings[:,0] - all_ratings[:,1])
     return probs
@@ -51,20 +51,33 @@ def main():
     # idxs = np.argsort(-wlsr_ratings)
     # for idx in range(idxs.shape[0]):
     #     print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{wlsr_ratings[idxs[idx]]}')
-
-    wlsr_probs = postprocess_from_luce(matchups, wlsr_ratings)
+    wlsr_probs = calc_probs_bt(matchups, wlsr_ratings)
     wlsr_metrics = binary_metrics_suite(wlsr_probs, outcomes)
     print(f'{wlsr_metrics=}')
+
+    ilsr_ratings = ilsr_ties(
+        n=n,
+        comparisons=comparisons,
+        ties=ties,
+        tol=1e-8
+    )
+    # idxs = np.argsort(-wlsr_ratings)
+    # for idx in range(idxs.shape[0]):
+    #     print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{wlsr_ratings[idxs[idx]]}')
+    ilsr_probs = calc_probs_bt(matchups, ilsr_ratings)
+    ilsr_metrics = binary_metrics_suite(ilsr_probs, outcomes)
+    print(f'{ilsr_metrics=}')
+
 
     mm_ratings = mm_ties(
         n=n,
         comparisons=comparisons,
         ties=ties
     )
-    idxs = np.argsort(-mm_ratings)
-    for idx in range(idxs.shape[0]):
-        print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{mm_ratings[idxs[idx]]}')
-    mm_probs = postprocess_from_luce(matchups, mm_ratings)
+    # idxs = np.argsort(-mm_ratings)
+    # for idx in range(idxs.shape[0]):
+    #     print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{mm_ratings[idxs[idx]]}')
+    mm_probs = calc_probs_bt(matchups, mm_ratings)
     mm_metrics = binary_metrics_suite(mm_probs, outcomes)
     print(f'{mm_metrics=}')
 

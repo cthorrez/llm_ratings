@@ -104,6 +104,18 @@ def wlsr_ties(n, comparisons, ties, weights=None, theta=SQRT_2):
     chain -= np.diag(chain.sum(axis=1))
     return statdist(chain)
 
+def ilsr_ties(n, comparisons, ties, weights=None, theta=SQRT_2, tol=1e-6):
+    chain = np.zeros((n, n), dtype=float)
+    if weights is None:
+        weights = np.ones(n, dtype=float)
+
+    delta = 1.0
+    while delta > tol:
+        new_weights = wlsr_ties(n, comparisons, ties, weights)
+        delta = spl.norm(new_weights - weights)
+        weights = new_weights
+    return weights
+
 
 def mm_ties(n, comparisons, ties, weights=None, theta=SQRT_2):
     if weights is None:
