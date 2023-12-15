@@ -21,22 +21,24 @@ def main():
     )
     matchups = dataset.matchups
     outcomes = dataset.outcomes
+    theta = math.sqrt(2.0)
+    # theta = 1.0
 
-    wslr_probs = get_ilsr_probs(matchups, outcomes, max_iter=1)
+    wslr_probs = get_ilsr_probs(matchups, outcomes, theta=theta, max_iter=1)
     wslr_metrics = binary_metrics_suite(wslr_probs, outcomes)
     print(f'{wslr_metrics=}')
 
-    islr_probs = get_ilsr_probs(matchups, outcomes)
+    islr_probs = get_ilsr_probs(matchups, outcomes, theta=theta)
     islr_metrics = binary_metrics_suite(islr_probs, outcomes)
     print(f'{islr_metrics=}')
 
-    mm_probs = get_mm_probs(matchups, outcomes, max_iter=1)
+    mm_probs = get_mm_probs(matchups, outcomes, theta=theta, max_iter=1)
     mm_metrics = binary_metrics_suite(mm_probs, outcomes)
     print(f'{mm_metrics=}')
 
-    # imm_probs = get_mm_probs(matchups, outcomes)
-    # imm_metrics = binary_metrics_suite(imm_probs, outcomes)
-    # print(f'{imm_metrics=}')
+    imm_probs = get_mm_probs(matchups, outcomes, theta=theta)
+    imm_metrics = binary_metrics_suite(imm_probs, outcomes)
+    print(f'{imm_metrics=}')
 
     lbfgs_probs = get_lbfgs_probs(matchups, outcomes)
     lbfgs_metrics = binary_metrics_suite(lbfgs_probs, outcomes)
@@ -46,9 +48,9 @@ def main():
     lbfgs_metrics = binary_metrics_suite(lbfgs_probs, outcomes)
     print(f'{lbfgs_metrics=}')
 
-    newtoncg_probs = get_newtoncg_probs(matchups, outcomes)
-    newtoncg_metrics = binary_metrics_suite(newtoncg_probs, outcomes)
-    print(f'{newtoncg_metrics=}')
+    # newtoncg_probs = get_newtoncg_probs(matchups, outcomes)
+    # newtoncg_metrics = binary_metrics_suite(newtoncg_probs, outcomes)
+    # print(f'{newtoncg_metrics=}')
 
 
 if __name__ == '__main__':

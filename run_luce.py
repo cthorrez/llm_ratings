@@ -1,4 +1,5 @@
 import time
+import math
 import numpy as np
 from scipy.special import expit
 import pandas as pd
@@ -7,6 +8,8 @@ from riix.utils.data_utils import RatingDataset
 from riix.eval import evaluate
 from riix.metrics import binary_metrics_suite
 from luce import wlsr_ties, mm_ties, ilsr_ties, imm_ties
+
+SQRT2 = math.sqrt(2.0)
 
 def preprocess_for_luce(matchups, outcomes):
     draw_mask = outcomes == 0.5
@@ -22,7 +25,7 @@ def calc_probs_bt(matchups, ratings):
     return probs
 
 
-def get_ilsr_probs(matchups, outcomes, max_iter=1000):
+def get_ilsr_probs(matchups, outcomes, theta=SQRT2, max_iter=1000):
     comparisons, ties = preprocess_for_luce(matchups, outcomes)
     num_competitors = np.max(matchups) + 1
 
@@ -30,6 +33,7 @@ def get_ilsr_probs(matchups, outcomes, max_iter=1000):
         n=num_competitors,
         comparisons=comparisons,
         ties=ties,
+        theta=theta,
         max_iter=max_iter,
         tol=1e-8
     )
@@ -37,7 +41,7 @@ def get_ilsr_probs(matchups, outcomes, max_iter=1000):
     return probs
 
 
-def get_mm_probs(matchups, outcomes, max_iter=1000):
+def get_mm_probs(matchups, outcomes, theta=SQRT2, max_iter=1000):
     comparisons, ties = preprocess_for_luce(matchups, outcomes)
     num_competitors = np.max(matchups) + 1
 
@@ -45,6 +49,7 @@ def get_mm_probs(matchups, outcomes, max_iter=1000):
         n=num_competitors,
         comparisons=comparisons,
         ties=ties,
+        theta=theta,
         max_iter=max_iter,
         tol=1e-8
     )

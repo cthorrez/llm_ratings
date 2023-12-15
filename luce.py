@@ -30,6 +30,12 @@ LOG_2 = math.log(2.0)
 SQRT_2 = math.sqrt(2.0)
 
 
+def log_transform(weights):
+    """Transform weights into centered log-scale parameters."""
+    params = np.log(weights)
+    return params - params.mean()
+
+
 ###
 # Inference algorithms working with pairwise comparisons.
 
@@ -104,18 +110,18 @@ def wlsr_ties(n, comparisons, ties, weights=None, theta=SQRT_2):
     chain -= np.diag(chain.sum(axis=1))
     return statdist(chain)
 
-def ilsr_ties(n, comparisons, ties, weights=None, theta=SQRT_2, max_iter=1000, tol=1e-6):
+def ilsr_ties(n, comparisons, ties, weights=None, theta=SQRT_2, max_iter=1000, tol=1e-8):
     chain = np.zeros((n, n), dtype=float)
     if weights is None:
         weights = np.ones(n, dtype=float)
     num_iter = 0
     delta = 1.0
     while (delta > tol) and (num_iter < max_iter):
-        new_weights = wlsr_ties(n, comparisons, ties, weights)
+        new_weights = wlsr_ties(n, comparisons, ties, weights, theta=theta)
         delta = spl.norm(new_weights - weights)
         weights = new_weights
         num_iter += 1
-    return weights
+    return log_transform(weights)
 
 
 def mm_ties(n, comparisons, ties, weights=None, theta=SQRT_2):
@@ -144,11 +150,11 @@ def imm_ties(n, comparisons, ties, weights=None, theta=SQRT_2, max_iter=1000, to
     num_iter = 0
     delta = 1.0
     while (delta > tol) and (num_iter < max_iter):
-        new_weights = mm_ties(n, comparisons, ties, weights)
+        new_weights = mm_ties(n, comparisons, ties, weights, theta=theta)
         delta = spl.norm(new_weights - weights)
         weights = new_weights
         num_iter += 1
-    return weights
+    return log_transform(weights)
 
 
 ###
