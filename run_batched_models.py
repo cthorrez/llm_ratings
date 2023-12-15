@@ -1,4 +1,5 @@
 import math
+from functools import partial
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
@@ -9,11 +10,46 @@ from riix.metrics import binary_metrics_suite
 from models import bt_loss_and_grad, bt_hess_vec_prod, bt_f_grad_hess
 from opt import diag_hess_newtons_method
 
+ALPHA = math.log(10.0) / 400.0
+ALPHA = 1.0
 
-def calc_probs_bt(matchups, ratings, alpha=math.log(10.0) /  400.):
+def calc_probs_bt(matchups, ratings, base, s):
+    alpha = math.log(base) / s
     all_ratings = ratings[matchups]
     probs = expit(alpha * (all_ratings[:,0] - all_ratings[:,1]))
     return probs
+
+
+def get_lbfgs_probs(matchups, outcomes, base=10., s=400.0):
+    num_competitors = np.max(matchups) + 1
+    ratings = np.zeros(num_competitors)
+    ratings = minimize(
+        fun=partial(bt_loss_and_grad, base=base, s=s),
+        x0=ratings,
+        args = (matchups, outcomes),
+        method='L-BFGS-B',
+        jac=True,
+        options={'disp' : False}
+    )['x']
+    probs = calc_probs_bt(matchups, ratings, base=base, s=s)
+    return probs
+
+
+def get_newtoncg_probs(matchups, outcomes, base=10., s=400.0):
+    num_competitors = np.max(matchups) + 1
+    ratings = np.zeros(num_competitors)
+    ratings = minimize(
+        fun=partial(bt_loss_and_grad, base=base, s=s),
+        x0=ratings,
+        args = (matchups, outcomes),
+        method='newton-cg',
+        jac=True,
+        hessp=partial(bt_hess_vec_prod, base=base, s=s),
+        options={'disp' : False}
+    )['x']
+    probs = calc_probs_bt(matchups, ratings, base=base, s=s)
+    return probs
+
 
 def main():
     matches = pd.read_json('clean_battle_anony_20231206.json')
@@ -27,17 +63,17 @@ def main():
         timestamp_col='tstamp',
     )
 
-    ratings = np.zeros(dataset.num_competitors) + 1000.0
+    ratings = np.zeros(dataset.num_competitors)
     matchups = dataset.matchups
     outcomes = dataset.outcomes
 
     fit_ratings = minimize(
-        fun=bt_loss_and_grad,
+        fun=partial(bt_loss_and_grad, base=math.e, s=1.0),
         x0=ratings,
         args = (matchups, outcomes),
         method='L-BFGS-B',
         jac=True,
-        hessp=bt_hess_vec_prod,
+        hessp=partial(bt_hess_vec_prod, base=math.e, s=1.0),
         options={'disp' : False}
     )
     # print(fit_ratings)

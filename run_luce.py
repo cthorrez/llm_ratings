@@ -6,7 +6,7 @@ from datasets import load_dataset
 from riix.utils.data_utils import RatingDataset
 from riix.eval import evaluate
 from riix.metrics import binary_metrics_suite
-from luce import wlsr_ties, mm_ties, ilsr_ties
+from luce import wlsr_ties, mm_ties, ilsr_ties, imm_ties
 
 def preprocess_for_luce(matchups, outcomes):
     draw_mask = outcomes == 0.5
@@ -20,6 +20,39 @@ def calc_probs_bt(matchups, ratings):
     all_ratings = ratings[matchups]
     probs = expit(all_ratings[:,0] - all_ratings[:,1])
     return probs
+
+
+def get_ilsr_probs(matchups, outcomes, max_iter=1000):
+    comparisons, ties = preprocess_for_luce(matchups, outcomes)
+    num_competitors = np.max(matchups) + 1
+
+    ratings = ilsr_ties(
+        n=num_competitors,
+        comparisons=comparisons,
+        ties=ties,
+        max_iter=max_iter,
+        tol=1e-8
+    )
+    probs = calc_probs_bt(matchups, ratings)
+    return probs
+
+
+def get_mm_probs(matchups, outcomes, max_iter=1000):
+    comparisons, ties = preprocess_for_luce(matchups, outcomes)
+    num_competitors = np.max(matchups) + 1
+
+    ratings = imm_ties(
+        n=num_competitors,
+        comparisons=comparisons,
+        ties=ties,
+        max_iter=max_iter,
+        tol=1e-8
+    )
+    probs = calc_probs_bt(matchups, ratings)
+    return probs
+
+
+
 
 
 def main():
