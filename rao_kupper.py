@@ -25,6 +25,8 @@ def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):
         model.observe(winners=[winner], losers=[loser], t=0.0, tie=is_tie)
     model.fit(verbose=False, tol=1e-6, max_iter=100)
 
+    print(f'model mean neg log likelihood: {-model.log_likelihood / (2*matchups.shape[0])}')
+
     probs = np.empty_like(outcomes)
     for idx, (comp_1, comp_2) in enumerate(matchups):
         prob, _, _ = model.probabilities([comp_1], [comp_2], t=0.0, margin=0.0)

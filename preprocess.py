@@ -6,6 +6,7 @@ def main():
     url = "https://drive.google.com/file/d/1vv_-tI_hGIJSraHUGRz_9P8ip3qUCD9E/view"
     filename = gdown.download(url, quiet=False, fuzzy=True)
     df = pd.read_json(filename).sort_values(ascending=True, by=["tstamp"])
+    print(df.shape)
     df = df[df['anony'] == True]
     print(df.shape)
     print(df.columns)
