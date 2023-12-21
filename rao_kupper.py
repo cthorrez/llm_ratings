@@ -3,6 +3,33 @@ import numpy as np
 import kickscore as ks
 
 
+def get_rao_kupper_ratings(matchups, outcomes, obs_type="logit", margin=0.1, var=1.0):
+    model = ks.TernaryModel(margin=margin, obs_type=obs_type)
+    k = ks.kernel.Constant(var=var)
+
+    num_competitors = np.max(matchups) + 1
+    for item in range(num_competitors):
+        model.add_item(item, kernel=k)
+
+    for matchup, outcome in zip(matchups, outcomes):
+        is_tie = outcome == 0.5
+        winner, loser = matchup
+        if outcome == 0.0:
+            winner, loser = loser, winner
+        model.observe(winners=[winner], losers=[loser], t=0.0, tie=is_tie)
+    model.fit(verbose=False, tol=1e-6, max_iter=100)
+
+    print(f'model mean neg log likelihood: {-model.log_likelihood / matchups.shape[0]}')
+
+    ratings = []
+    for item in range(num_competitors):
+        ms, vs = model.item[item].predict([0.0])
+        score = ms[0]
+        ratings.append(score)
+
+    return np.array(ratings)
+
+
 def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):
     draw_prob = (outcomes == 0.5).mean()
     # draw_margin = math.exp(draw_prob)
@@ -25,7 +52,7 @@ def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):
         model.observe(winners=[winner], losers=[loser], t=0.0, tie=is_tie)
     model.fit(verbose=False, tol=1e-6, max_iter=100)
 
-    print(f'model mean neg log likelihood: {-model.log_likelihood / (2*matchups.shape[0])}')
+    print(f'model mean neg log likelihood: {-model.log_likelihood / matchups.shape[0]}')
 
     probs = np.empty_like(outcomes)
     for idx, (comp_1, comp_2) in enumerate(matchups):
