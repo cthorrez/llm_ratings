@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from rao_kupper_models import calc_probs_rk
 
 
 def bt_log_likelihood(ratings, matchups, outcomes, base=math.e, scale=1.0):
@@ -10,16 +11,13 @@ def bt_log_likelihood(ratings, matchups, outcomes, base=math.e, scale=1.0):
     nll = (outcomes * np.log(probs)) + ((1.0 - outcomes) * np.log(1.0 - probs))
     return nll.mean()
 
-def rk_log_likelihood(ratings, matchups, outcomes, theta=1.0, base=math.e, scale=1.0):
-    pi = np.exp(ratings)
-    pi_1 = pi[matchups[:,0]]
-    pi_2 = pi[matchups[:,1]]
-    denom_1 = pi_1 + (theta * pi_2)
-    denom_2 = pi_2 + (theta * pi_1)
-    prob_1_win = pi_1 / denom_1
-    prob_2_win = pi_2 / denom_2
-    num = pi_1 * pi_2 * (np.square(theta) - 1.0)
-    prob_draw = num / (denom_1 * denom_2)
+def rk_log_likelihood(ratings, matchups, outcomes, theta=1.0):
+    prob_1_win, prob_draw, prob_2_win = calc_probs_rk(
+        ratings,
+        matchups,
+        outcomes,
+        theta=theta
+    )
     win_1_mask = outcomes == 1.0
     win_2_mask = outcomes == 0.0
     draw_mask = outcomes == 0.5

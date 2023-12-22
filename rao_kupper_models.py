@@ -59,4 +59,17 @@ def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):
         prob, _, _ = model.probabilities([comp_1], [comp_2], t=0.0, margin=0.0)
         probs[idx] = prob
     return probs
+
+
+def calc_probs_rk(ratings, matchups, outcomes, theta=1.0):
+    pi = np.exp(ratings)
+    pi_1 = pi[matchups[:,0]]
+    pi_2 = pi[matchups[:,1]]
+    denom_1 = pi_1 + (theta * pi_2)
+    denom_2 = pi_2 + (theta * pi_1)
+    prob_1_win = pi_1 / denom_1
+    prob_2_win = pi_2 / denom_2
+    num = pi_1 * pi_2 * (np.square(theta) - 1.0)
+    prob_draw = num / (denom_1 * denom_2)
+    return prob_1_win, prob_draw, prob_2_win
    

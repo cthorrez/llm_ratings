@@ -13,14 +13,14 @@ from opt import diag_hess_newtons_method
 ALPHA = math.log(10.0) / 400.0
 ALPHA = 1.0
 
-def calc_probs_bt(matchups, ratings, base, s):
-    alpha = math.log(base) / s
+def calc_probs_bt(matchups, ratings, base, scale):
+    alpha = math.log(base) / scale
     all_ratings = ratings[matchups]
     probs = expit(alpha * (all_ratings[:,0] - all_ratings[:,1]))
     return probs
 
 
-def get_lbfgs_probs(matchups, outcomes, base=10., s=400.0):
+def get_bt_ratings_lbfgs(matchups, outcomes, base=10., s=400.0):
     num_competitors = np.max(matchups) + 1
     ratings = np.zeros(num_competitors)
     ratings = minimize(
@@ -31,11 +31,14 @@ def get_lbfgs_probs(matchups, outcomes, base=10., s=400.0):
         jac=True,
         options={'disp' : False}
     )['x']
+    return ratings
+
+def get_bt_probs_lbfgs(matchups, outcomes, base=10., s=400.0):
+    ratings = get_bt_ratings_lbfgs(matchups, outcomes, base, s)
     probs = calc_probs_bt(matchups, ratings, base=base, s=s)
     return probs
 
-
-def get_newtoncg_probs(matchups, outcomes, base=10., s=400.0):
+def get_bt_probs_newtoncg(matchups, outcomes, base=10., s=400.0):
     num_competitors = np.max(matchups) + 1
     ratings = np.zeros(num_competitors)
     ratings = minimize(

@@ -5,7 +5,7 @@ from riix.utils.data_utils import RatingDataset
 from riix.metrics import binary_metrics_suite
 
 from luce_models import get_ilsr_ratings, get_ilsr_probs, get_mm_probs
-from opt_models import get_lbfgs_probs, get_newtoncg_probs
+from bradley_terry_models import get_bt_probs_lbfgs, get_bt_probs_newtoncg
 from rao_kupper import get_rao_kupper_ratings, get_rao_kupper_probs
 from likelihoods import bt_log_likelihood, rk_log_likelihood
 
