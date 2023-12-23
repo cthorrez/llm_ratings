@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from riix.utils.data_utils import RatingDataset
@@ -23,5 +24,14 @@ def preprocess(df):
     )
     matchups = dataset.matchups
     outcomes = dataset.outcomes
-    return matchups, outcomes
+    competitors = dataset.idx_to_competitor
+    return matchups, outcomes, competitors
+
+def print_top_k(ratings, competitors, k=15):
+    sorted_idxs = np.argsort(-ratings)
+    for print_idx in range(k):
+        comp_idx = sorted_idxs[print_idx]
+        comp = competitors[comp_idx]
+        rating = ratings[comp_idx]
+        print(f'{comp:<30s}{rating:.6f}')
     

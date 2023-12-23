@@ -1,7 +1,7 @@
 import math
 import numpy as np
 from functools import partial
-from data_utils import load_and_split, preprocess
+from data_utils import load_and_split, preprocess, print_top_k
 from likelihoods import bt_log_likelihood, rk_log_likelihood
 from bradley_terry_models import get_bt_ratings_lbfgs
 from rao_kupper_models import get_rao_kupper_ratings
@@ -17,7 +17,8 @@ def bt_eval(
     test_outcomes,
     get_ratings_fn,
     base=math.e,
-    scale=1.0
+    scale=1.0,
+    print_ranking=False,
 ):
     ratings = get_ratings_fn(train_matchups, train_outcomes, base=base, scale=scale)
     train_nll = -bt_log_likelihood(ratings, train_matchups, train_outcomes, base=base, scale=scale)
@@ -29,6 +30,7 @@ def bt_eval(
     mask = test_outcomes != 0.5
     test_acc_no_draw = bt_accuracy(ratings, test_matchups[mask], test_outcomes[mask], base=base, scale=scale)
     print(f'test acc no draw: {test_acc_no_draw:.6f}')
+    return ratings
 
 
 def rk_eval(
@@ -47,58 +49,46 @@ def rk_eval(
     test_acc = rk_accuracy(ratings, test_matchups, test_outcomes, theta=theta)
     print(f'train acc: {train_acc:.6f}\ttest acc: {test_acc:.6f}')
     mask = test_outcomes != 0.5
-    test_acc_no_draw = rk_accuracy(ratings, test_matchups[mask], test_outcomes[mask], theta=theta)
+    test_acc_no_draw = rk_accuracy(ratings, test_matchups[mask], test_outcomes[mask], theta=1.0)
     print(f'test acc no draw: {test_acc_no_draw:.6f}')
-
-
-
-
-
-
-
+    return ratings
 
 
 def main():
-    train_df, test_df = load_and_split(test_size=0.2, shuffle=True, seed=0)
-    train_matchups, train_outcomes = preprocess(train_df)
-    test_matchups, test_outcomes = preprocess(test_df)
+    train_df, test_df = load_and_split(test_size=0.2, shuffle=True, seed=1)
+    train_matchups, train_outcomes, competitors = preprocess(train_df)
+    test_matchups, test_outcomes, _ = preprocess(test_df)
     draw_rate = (train_outcomes == 0.5).mean()
     print(f'{draw_rate=}')
-
-    # draw_margin = 0.05
-    # theta = math.exp(draw_margin)
-    
-    theta = math.sqrt(2.0)
-    theta = 1.25
-    draw_margin = np.log(theta)
 
     k = 4.0
     base = 10.0
     scale = 400.0
     elo_fn = partial(get_elo_ratings, k=k)
     print(f'evaluating elo: {k=}, {base=}, {scale=}')
-    bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, elo_fn, base, scale)
+    elo_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, elo_fn, base, scale)
+    print_top_k(elo_ratings, competitors)
     print('')
 
     base = math.e
     scale=1.0
     bt_fn = partial(get_bt_ratings_lbfgs, base=base, scale=scale)
     print(f'evaluating lbfgs bt {base=}, {scale=}')
-    bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, bt_fn, base, scale)
+    bt_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, bt_fn, base, scale)
+    print_top_k(bt_ratings, competitors)
     print('')
 
-
-    theta = 1.1
+    theta = 2.0
     ilsr_fn = partial(get_ilsr_ratings, theta=theta, eps=1e-6, do_log_transform=False)
     print(f'evaluating ilsr rk {theta=}')
-    rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, theta=theta)
+    ilsr_ratings = rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, theta=theta)
+    print_top_k(ilsr_ratings, competitors)
     print('')
 
-    kickscore_fn = partial(get_rao_kupper_ratings, theta=theta)
-    print(f'evaluating kickscore kr {theta=}')
-    rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, kickscore_fn, theta=theta)
-    print('')
-    exit(1)
+    # kickscore_fn = partial(get_rao_kupper_ratings, theta=theta)
+    # print(f'evaluating kickscore kr {theta=}')
+    # rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, kickscore_fn, theta=theta)
+    # print('')
 
 if __name__ == '__main__':
     main()
