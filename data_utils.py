@@ -19,6 +19,7 @@ def preprocess(df):
         competitor_cols=['model_a', 'model_b'],
         outcome_col='outcome',
         timestamp_col='tstamp',
+        verbose=False,
     )
     matchups = dataset.matchups
     outcomes = dataset.outcomes

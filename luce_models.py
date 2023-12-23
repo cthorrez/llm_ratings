@@ -33,7 +33,7 @@ def get_ilsr_ratings(matchups, outcomes, theta=SQRT2, max_iter=1000):
         ties=ties,
         theta=theta,
         max_iter=max_iter,
-        tol=1e-8
+        tol=1e-6
     )
     return ratings
 
