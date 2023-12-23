@@ -24,7 +24,7 @@ def calc_probs_bt(matchups, ratings):
     probs = expit(all_ratings[:,0] - all_ratings[:,1])
     return probs
 
-def get_ilsr_ratings(matchups, outcomes, theta=SQRT2, max_iter=1000):
+def get_ilsr_ratings(matchups, outcomes, theta=SQRT2, max_iter=1000, eps=1e-6, do_log_transform=False):
     comparisons, ties = preprocess_for_luce(matchups, outcomes)
     num_competitors = np.max(matchups) + 1
     ratings = ilsr_ties(
@@ -33,7 +33,8 @@ def get_ilsr_ratings(matchups, outcomes, theta=SQRT2, max_iter=1000):
         ties=ties,
         theta=theta,
         max_iter=max_iter,
-        tol=1e-6
+        tol=eps,
+        do_log_transform=do_log_transform
     )
     return ratings
 

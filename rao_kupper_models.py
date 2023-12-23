@@ -62,7 +62,7 @@ def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):
 
 
 def calc_probs_rk(ratings, matchups, outcomes, theta=1.0):
-    pi = np.exp(ratings)
+    pi = ratings
     pi_1 = pi[matchups[:,0]]
     pi_2 = pi[matchups[:,1]]
     denom_1 = pi_1 + (theta * pi_2)

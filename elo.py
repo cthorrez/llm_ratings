@@ -7,6 +7,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+from riix.models.elo import Elo
 
 
 def compute_elo(battles, K=4, SCALE=400, BASE=10, INIT_RATING=1000):
@@ -94,3 +95,16 @@ def pretty_print_elo_ratings(ratings):
     df["Elo rating"] = (df["Elo rating"] + 0.5).astype(int)
     df.index = df.index + 1
     print(df)
+
+
+def get_elo_ratings(matchups, outcomes, k, base=math.e, scale=1.0):
+    num_competitors = np.max(matchups) + 1
+    model = Elo(
+        num_competitors=num_competitors,
+        initial_rating=0.0,
+        k=k,
+        alpha=math.log(base) / scale,
+        update_method='iterative'
+    )
+    _ = model.fit(time_step=0, matchups=matchups, outcomes=outcomes)
+    return model.ratings
