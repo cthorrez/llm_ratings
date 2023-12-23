@@ -3,7 +3,12 @@ import numpy as np
 import kickscore as ks
 
 
-def get_rao_kupper_ratings(matchups, outcomes, obs_type="logit", margin=0.1, var=1.0):
+def get_rao_kupper_ratings(matchups, outcomes, obs_type="logit", margin=None, theta=None, var=1.0):
+    if margin is not None:
+        margin = margin
+    if theta is not None:
+        margin = math.log(theta)
+
     model = ks.TernaryModel(margin=margin, obs_type=obs_type)
     k = ks.kernel.Constant(var=var)
 
@@ -27,7 +32,9 @@ def get_rao_kupper_ratings(matchups, outcomes, obs_type="logit", margin=0.1, var
         score = ms[0]
         ratings.append(score)
 
-    return np.array(ratings)
+    ratings = np.array(ratings)
+    ratings = np.exp(ratings)   # this seems to fit them in log scale so we do this before computing metrics
+    return ratings
 
 
 def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):

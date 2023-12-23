@@ -20,11 +20,11 @@ def calc_probs_bt(matchups, ratings, base, scale):
     return probs
 
 
-def get_bt_ratings_lbfgs(matchups, outcomes, base=10., s=400.0):
+def get_bt_ratings_lbfgs(matchups, outcomes, base=10., scale=400.0):
     num_competitors = np.max(matchups) + 1
     ratings = np.zeros(num_competitors)
     ratings = minimize(
-        fun=partial(bt_loss_and_grad, base=base, s=s),
+        fun=partial(bt_loss_and_grad, base=base, s=scale),
         x0=ratings,
         args = (matchups, outcomes),
         method='L-BFGS-B',
@@ -33,9 +33,9 @@ def get_bt_ratings_lbfgs(matchups, outcomes, base=10., s=400.0):
     )['x']
     return ratings
 
-def get_bt_probs_lbfgs(matchups, outcomes, base=10., s=400.0):
-    ratings = get_bt_ratings_lbfgs(matchups, outcomes, base, s)
-    probs = calc_probs_bt(matchups, ratings, base=base, s=s)
+def get_bt_probs_lbfgs(matchups, outcomes, base=10., scale=400.0):
+    ratings = get_bt_ratings_lbfgs(matchups, outcomes, base, scale)
+    probs = calc_probs_bt(matchups, ratings, base=base, s=scale)
     return probs
 
 def get_bt_probs_newtoncg(matchups, outcomes, base=10., s=400.0):

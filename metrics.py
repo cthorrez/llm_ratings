@@ -16,9 +16,6 @@ def bt_accuracy(ratings, matchups, outcomes, draw_margin=0.0, base=math.e, scale
     correct_wins = np.logical_and(preds==1.0, outcomes==1.0).sum()
     correct_losses = np.logical_and(preds==0.0, outcomes==0.0).sum()
     correct_draws = np.logical_and(preds==0.5, outcomes==0.5).sum()
-    print(f'{correct_wins=}')
-    print(f'{correct_losses=}')
-    print(f'{correct_draws=}')
     return (correct_wins + correct_losses + correct_draws) / matchups.shape[0]
 
 def rk_accuracy(ratings, matchups, outcomes, theta=1.0):
@@ -34,8 +31,5 @@ def rk_accuracy(ratings, matchups, outcomes, theta=1.0):
     correct_wins = np.logical_and(preds==1.0, outcomes==1.0).sum()
     correct_losses = np.logical_and(preds==0.0, outcomes==0.0).sum()
     correct_draws = np.logical_and(preds==0.5, outcomes==0.5).sum()
-    print(f'{correct_wins=}')
-    print(f'{correct_losses=}')
-    print(f'{correct_draws=}')
     return (correct_wins + correct_losses + correct_draws) / matchups.shape[0]
 
