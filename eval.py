@@ -54,8 +54,8 @@ def rk_eval(
     return ratings
 
 
-def main():
-    train_df, test_df = load_and_split(test_size=0.2, shuffle=True, seed=1)
+def main(seed=0, verbose=False):
+    train_df, test_df = load_and_split(test_size=0.2, shuffle=True, seed=seed)
     train_matchups, train_outcomes, competitors = preprocess(train_df)
     test_matchups, test_outcomes, _ = preprocess(test_df)
     draw_rate = (train_outcomes == 0.5).mean()
@@ -67,7 +67,7 @@ def main():
     elo_fn = partial(get_elo_ratings, k=k)
     print(f'evaluating elo: {k=}, {base=}, {scale=}')
     elo_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, elo_fn, base, scale)
-    print_top_k(elo_ratings, competitors)
+    if verbose: print_top_k(elo_ratings, competitors)
     print('')
 
     base = math.e
@@ -75,14 +75,15 @@ def main():
     bt_fn = partial(get_bt_ratings_lbfgs, base=base, scale=scale)
     print(f'evaluating lbfgs bt {base=}, {scale=}')
     bt_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, bt_fn, base, scale)
-    print_top_k(bt_ratings, competitors)
+    if verbose: print_top_k(bt_ratings, competitors)
     print('')
 
     theta = 2.0
-    ilsr_fn = partial(get_ilsr_ratings, theta=theta, eps=1e-6, do_log_transform=False)
-    print(f'evaluating ilsr rk {theta=}')
+    max_iter = 2
+    ilsr_fn = partial(get_ilsr_ratings, theta=theta, max_iter=max_iter, eps=1e-6)
+    print(f'evaluating ilsr rk {theta=}, {max_iter=}')
     ilsr_ratings = rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, theta=theta)
-    print_top_k(ilsr_ratings, competitors)
+    if verbose: print_top_k(ilsr_ratings, competitors)
     print('')
 
     # kickscore_fn = partial(get_rao_kupper_ratings, theta=theta)
@@ -91,4 +92,5 @@ def main():
     # print('')
 
 if __name__ == '__main__':
-    main()
+    for seed in range(10):
+        main(seed=seed)
