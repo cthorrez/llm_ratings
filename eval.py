@@ -1,7 +1,8 @@
 import math
-import numpy as np
 from functools import partial
-from data_utils import load_and_split, preprocess, print_top_k
+import numpy as np
+import pandas as pd
+from data_utils import load, split, preprocess, print_top_k
 from likelihoods import bt_log_likelihood, rk_log_likelihood
 from bradley_terry_models import get_bt_ratings_lbfgs
 from rao_kupper_models import get_rao_kupper_ratings
@@ -22,7 +23,7 @@ def bt_eval(
 ):
     ratings = get_ratings_fn(train_matchups, train_outcomes, base=base, scale=scale)
     train_nll = -bt_log_likelihood(ratings, train_matchups, train_outcomes, base=base, scale=scale)
-    test_nll = -bt_log_likelihood(ratings, test_matchups, test_outcomes, base=base, scale=scale)
+    test_nll = -bt_log_likelihood(ratings, test_matchups, test_outcomes, base=base, scale=scale)    
     print(f'train nll: {train_nll:.6f}\ttest nll: {test_nll:.6f}')
     train_acc = bt_accuracy(ratings, train_matchups, train_outcomes, base=base, scale=scale)
     test_acc = bt_accuracy(ratings, test_matchups, test_outcomes, base=base, scale=scale)
@@ -30,7 +31,15 @@ def bt_eval(
     mask = test_outcomes != 0.5
     test_acc_no_draw = bt_accuracy(ratings, test_matchups[mask], test_outcomes[mask], base=base, scale=scale)
     print(f'test acc no draw: {test_acc_no_draw:.6f}')
-    return ratings
+
+    metrics = {
+        'train_nll' : train_nll,
+        'test_nll' : test_nll,
+        'train_acc' : train_acc,
+        'test_acc' :  test_acc,
+        'test_acc_no_draw' : test_acc_no_draw
+    }
+    return metrics, ratings
 
 
 def rk_eval(
@@ -51,22 +60,30 @@ def rk_eval(
     mask = test_outcomes != 0.5
     test_acc_no_draw = rk_accuracy(ratings, test_matchups[mask], test_outcomes[mask], theta=1.0)
     print(f'test acc no draw: {test_acc_no_draw:.6f}')
-    return ratings
+    metrics = {
+        'train_nll' : train_nll,
+        'test_nll' : test_nll,
+        'train_acc' : train_acc,
+        'test_acc' :  test_acc,
+        'test_acc_no_draw' : test_acc_no_draw
+    }
+    return metrics, ratings
 
 
-def main(seed=0, verbose=False):
-    train_df, test_df = load_and_split(test_size=0.2, shuffle=True, seed=seed)
+def eval_seed(df, seed=0, verbose=False):
+    train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=seed)
     train_matchups, train_outcomes, competitors = preprocess(train_df)
     test_matchups, test_outcomes, _ = preprocess(test_df)
     draw_rate = (train_outcomes == 0.5).mean()
-    print(f'{draw_rate=}')
+    if verbose: print(f'{draw_rate=}')
 
     k = 4.0
     base = 10.0
     scale = 400.0
     elo_fn = partial(get_elo_ratings, k=k)
     print(f'evaluating elo: {k=}, {base=}, {scale=}')
-    elo_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, elo_fn, base, scale)
+    elo_metrics, elo_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, elo_fn, base, scale)
+    elo_metrics['method'] = 'elo'
     if verbose: print_top_k(elo_ratings, competitors)
     print('')
 
@@ -74,7 +91,8 @@ def main(seed=0, verbose=False):
     scale=1.0
     bt_fn = partial(get_bt_ratings_lbfgs, base=base, scale=scale)
     print(f'evaluating lbfgs bt {base=}, {scale=}')
-    bt_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, bt_fn, base, scale)
+    bt_metrics, bt_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, bt_fn, base, scale)
+    bt_metrics['method'] = 'bt'
     if verbose: print_top_k(bt_ratings, competitors)
     print('')
 
@@ -82,15 +100,22 @@ def main(seed=0, verbose=False):
     max_iter = 2
     ilsr_fn = partial(get_ilsr_ratings, theta=theta, max_iter=max_iter, eps=1e-6)
     print(f'evaluating ilsr rk {theta=}, {max_iter=}')
-    ilsr_ratings = rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, theta=theta)
+    ilsr_metrics, ilsr_ratings = rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, theta=theta)
+    ilsr_metrics['method'] = 'ilsr'
     if verbose: print_top_k(ilsr_ratings, competitors)
     print('')
 
-    # kickscore_fn = partial(get_rao_kupper_ratings, theta=theta)
-    # print(f'evaluating kickscore kr {theta=}')
-    # rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, kickscore_fn, theta=theta)
-    # print('')
+    metrics = [elo_metrics, bt_metrics, ilsr_metrics]
+    for metric in metrics:
+        metric['seed'] = seed
+    return metrics
+
 
 if __name__ == '__main__':
-    for seed in range(10):
-        main(seed=seed)
+    df = load()
+    metrics = []
+    for seed in range(100):
+        seed_metrics = eval_seed(df, seed=seed)
+        metrics.extend(seed_metrics)
+    metrics_df = pd.DataFrame(metrics)
+    print(metrics_df.groupby(['method']).mean())
