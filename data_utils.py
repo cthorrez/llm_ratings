@@ -35,7 +35,8 @@ def preprocess(df):
     competitors = dataset.idx_to_competitor
     return matchups, outcomes, competitors
 
-def print_top_k(ratings, competitors, k=15):
+def print_top_k(ratings, competitors, k=100):
+    k = min(k, ratings.shape[0])
     sorted_idxs = np.argsort(-ratings)
     for print_idx in range(k):
         comp_idx = sorted_idxs[print_idx]

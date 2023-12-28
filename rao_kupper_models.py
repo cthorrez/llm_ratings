@@ -47,9 +47,9 @@ def get_rk_ratings_lbfgs(matchups, outcomes, theta=1.0):
         args = (matchups, outcomes),
         method='L-BFGS-B',
         jac=True,
-        options={'disp' : True}
+        options={'disp' : False}
     )['x']
-    return ratings - 1.0
+    return ratings
 
 
 def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):
@@ -116,7 +116,7 @@ def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
     win_2_loglike = np.log(prob_2_win[win_2_mask])
     draw_loglike = np.log(prob_draw[draw_mask])
     outcome_loglike = np.concatenate([win_1_loglike, win_2_loglike, draw_loglike])
-    loss = outcome_loglike.mean()
+    loss = -outcome_loglike.mean()
 
     dlp1win_dp1 = (1.0 / pi_1) - (1.0 / (pi_1 + (theta * pi_2)))
     dlp1win_dp2 = - theta / (pi_1 + (theta * pi_2))
@@ -133,6 +133,8 @@ def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
     grad[win_2_mask,1] = dlp2win_dp2[win_2_mask]
     grad[draw_mask,1] = dldraw_dp2[draw_mask]
 
+    # do negative sign since it's the NEGATIVE log likelihood
+    grad *= -1
     grad = (grad[:,:,None] * schedule_mask).mean(axis=(0,1))
     return loss, grad
 
