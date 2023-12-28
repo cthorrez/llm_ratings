@@ -10,8 +10,6 @@ from riix.metrics import binary_metrics_suite
 from models import bt_loss_and_grad, bt_hess_vec_prod, bt_f_grad_hess
 from opt import diag_hess_newtons_method
 
-ALPHA = math.log(10.0) / 400.0
-ALPHA = 1.0
 
 def calc_probs_bt(matchups, ratings, base, scale):
     alpha = math.log(base) / scale

@@ -25,5 +25,4 @@ def rk_log_likelihood(ratings, matchups, outcomes, theta=1.0):
     win_2_loglike = np.log(prob_2_win[win_2_mask])
     draw_loglike = np.log(prob_draw[draw_mask])
     outcome_loglike = np.concatenate([win_1_loglike, win_2_loglike, draw_loglike])
-    return outcome_loglike.sum() / matchups.shape[0]
-
+    return outcome_loglike.mean()
