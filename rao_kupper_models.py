@@ -1,7 +1,8 @@
 import math
+from functools import partial
 import numpy as np
+from scipy.optimize import minimize
 import kickscore as ks
-
 
 def get_rao_kupper_ratings(matchups, outcomes, obs_type="logit", margin=None, theta=None, var=1.0):
     if margin is not None:
@@ -35,6 +36,20 @@ def get_rao_kupper_ratings(matchups, outcomes, obs_type="logit", margin=None, th
     ratings = np.array(ratings)
     ratings = np.exp(ratings)   # this seems to fit them in log scale so we do this before computing metrics
     return ratings
+
+
+def get_rk_ratings_lbfgs(matchups, outcomes, theta=1.0):
+    num_competitors = np.max(matchups) + 1
+    ratings = np.zeros(num_competitors) + 1.0
+    ratings = minimize(
+        fun=partial(rk_loss_and_grad, theta=theta),
+        x0=ratings,
+        args = (matchups, outcomes),
+        method='L-BFGS-B',
+        jac=True,
+        options={'disp' : True}
+    )['x']
+    return ratings - 1.0
 
 
 def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):
@@ -79,4 +94,46 @@ def calc_probs_rk(ratings, matchups, outcomes, theta=1.0):
     num = pi_1 * pi_2 * (np.square(theta) - 1.0)
     prob_draw = num / (denom_1 * denom_2)
     return prob_1_win, prob_draw, prob_2_win
+
+def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
+    pi = ratings
+    pi_1 = pi[matchups[:,0]]
+    pi_2 = pi[matchups[:,1]]
+    n_competitors = ratings.shape[0]
+    # mask of shape [num_matchups, 2, num_competitors]
+    schedule_mask = np.equal(matchups[:, :, None], np.arange(n_competitors)[None,:])
+
+    prob_1_win, prob_draw, prob_2_win = calc_probs_rk(
+        ratings,
+        matchups,
+        outcomes,
+        theta=theta
+    )
+    win_1_mask = outcomes == 1.0
+    win_2_mask = outcomes == 0.0
+    draw_mask = outcomes == 0.5
+    win_1_loglike = np.log(prob_1_win[win_1_mask])
+    win_2_loglike = np.log(prob_2_win[win_2_mask])
+    draw_loglike = np.log(prob_draw[draw_mask])
+    outcome_loglike = np.concatenate([win_1_loglike, win_2_loglike, draw_loglike])
+    loss = outcome_loglike.mean()
+
+    dlp1win_dp1 = (1.0 / pi_1) - (1.0 / (pi_1 + (theta * pi_2)))
+    dlp1win_dp2 = - theta / (pi_1 + (theta * pi_2))
+    dlp2win_dp1 = - theta / (pi_2 + (theta * pi_1))
+    dlp2win_dp2 = (1.0 / pi_2) - (1.0 / (pi_2 + (theta * (pi_1))))
+    dldraw_dp1 = dlp1win_dp1 + dlp2win_dp1
+    dldraw_dp2 = dlp1win_dp2 + dlp2win_dp2
+       
+    grad = np.zeros(shape=matchups.shape, dtype=np.float64)
+    grad[win_1_mask,0] = dlp1win_dp1[win_1_mask]
+    grad[win_2_mask,0] = dlp2win_dp1[win_2_mask]
+    grad[draw_mask,0] = dldraw_dp1[draw_mask]
+    grad[win_1_mask,1] = dlp1win_dp2[win_1_mask]
+    grad[win_2_mask,1] = dlp2win_dp2[win_2_mask]
+    grad[draw_mask,1] = dldraw_dp2[draw_mask]
+
+    grad = (grad[:,:,None] * schedule_mask).mean(axis=(0,1))
+    return loss, grad
+
    
