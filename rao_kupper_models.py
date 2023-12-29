@@ -40,7 +40,7 @@ def get_rao_kupper_ratings(matchups, outcomes, obs_type="logit", margin=None, th
 
 def get_rk_ratings_lbfgs(matchups, outcomes, theta=1.0):
     num_competitors = np.max(matchups) + 1
-    ratings = np.zeros(num_competitors) + 1.0
+    ratings = np.zeros(num_competitors) + 10.0
     ratings = minimize(
         fun=partial(rk_loss_and_grad, theta=theta),
         x0=ratings,
