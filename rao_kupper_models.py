@@ -40,7 +40,7 @@ def get_rao_kupper_ratings(matchups, outcomes, obs_type="logit", margin=None, th
 
 def get_rk_ratings_lbfgs(matchups, outcomes, theta=1.0):
     num_competitors = np.max(matchups) + 1
-    ratings = np.zeros(num_competitors) + 10.0
+    ratings = np.zeros(num_competitors)
     ratings = minimize(
         fun=partial(rk_loss_and_grad, theta=theta),
         x0=ratings,
@@ -49,6 +49,7 @@ def get_rk_ratings_lbfgs(matchups, outcomes, theta=1.0):
         jac=True,
         options={'disp' : False}
     )['x']
+    ratings = np.log(ratings)
     return ratings
 
 
@@ -96,7 +97,7 @@ def calc_probs_rk(ratings, matchups, outcomes, theta=1.0):
     return prob_1_win, prob_draw, prob_2_win
 
 def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
-    pi = ratings
+    pi = np.exp(ratings)
     pi_1 = pi[matchups[:,0]]
     pi_2 = pi[matchups[:,1]]
     n_competitors = ratings.shape[0]
@@ -132,6 +133,9 @@ def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
     grad[win_1_mask,1] = dlp1win_dp2[win_1_mask]
     grad[win_2_mask,1] = dlp2win_dp2[win_2_mask]
     grad[draw_mask,1] = dldraw_dp2[draw_mask]
+
+    # chain rule from log scale
+    grad = grad * np.exp(outcome_loglike[:,None])
 
     # do negative sign since it's the NEGATIVE log likelihood
     grad *= -1
