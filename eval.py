@@ -122,7 +122,7 @@ def eval_seed(df, seed=0, verbose=False):
 if __name__ == '__main__':
     df = load()
     metrics = []
-    for seed in range(1):
+    for seed in range(25):
         seed_metrics = eval_seed(df, seed=seed, verbose=False)
         metrics.extend(seed_metrics)
     metrics_df = pd.DataFrame(metrics)

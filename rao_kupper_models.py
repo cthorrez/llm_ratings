@@ -38,27 +38,10 @@ def get_rao_kupper_ratings(matchups, outcomes, obs_type="logit", margin=None, th
     return ratings
 
 
-def get_rk_ratings_lbfgs(matchups, outcomes, theta=1.0):
-    num_competitors = np.max(matchups) + 1
-    ratings = np.zeros(num_competitors)
-    ratings = minimize(
-        fun=partial(rk_loss_and_grad, theta=theta),
-        x0=ratings,
-        args = (matchups, outcomes),
-        method='L-BFGS-B',
-        jac=True,
-        options={'disp' : False}
-    )['x']
-    ratings = np.log(ratings)
-    return ratings
-
-
 def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):
     draw_prob = (outcomes == 0.5).mean()
     # draw_margin = math.exp(draw_prob)
     draw_margin = draw_prob / 2
-
-    
     print(f'{draw_margin=}')
 
     model = ks.TernaryModel(margin=draw_margin, obs_type=obs_type)
@@ -84,7 +67,21 @@ def get_rao_kupper_probs(matchups, outcomes, obs_type="logit", var=1.0):
     return probs
 
 
-def calc_probs_rk(ratings, matchups, outcomes, theta=1.0):
+def get_rk_ratings_lbfgs(matchups, outcomes, theta=1.0):
+    num_competitors = np.max(matchups) + 1
+    ratings = np.zeros(num_competitors)
+    ratings = minimize(
+        fun=partial(rk_loss_and_grad, theta=theta),
+        x0=ratings,
+        args = (matchups, outcomes),
+        method='L-BFGS-B',
+        jac=True,
+        options={'disp' : False}
+    )['x']
+    ratings = np.exp(ratings)
+    return ratings
+
+def calc_probs_rk(ratings, matchups, theta=1.0):
     pi = ratings
     pi_1 = pi[matchups[:,0]]
     pi_2 = pi[matchups[:,1]]
@@ -97,6 +94,7 @@ def calc_probs_rk(ratings, matchups, outcomes, theta=1.0):
     return prob_1_win, prob_draw, prob_2_win
 
 def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
+    pi = ratings
     pi = np.exp(ratings)
     pi_1 = pi[matchups[:,0]]
     pi_2 = pi[matchups[:,1]]
@@ -105,9 +103,8 @@ def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
     schedule_mask = np.equal(matchups[:, :, None], np.arange(n_competitors)[None,:])
 
     prob_1_win, prob_draw, prob_2_win = calc_probs_rk(
-        ratings,
+        pi,
         matchups,
-        outcomes,
         theta=theta
     )
     win_1_mask = outcomes == 1.0
@@ -134,12 +131,11 @@ def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
     grad[win_2_mask,1] = dlp2win_dp2[win_2_mask]
     grad[draw_mask,1] = dldraw_dp2[draw_mask]
 
-    # chain rule from log scale
-    grad = grad * np.exp(outcome_loglike[:,None])
-
     # do negative sign since it's the NEGATIVE log likelihood
     grad *= -1
     grad = (grad[:,:,None] * schedule_mask).mean(axis=(0,1))
+    
+    # grad = np.exp(ratings) * grad
     return loss, grad
 
    

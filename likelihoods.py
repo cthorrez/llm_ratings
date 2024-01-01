@@ -15,7 +15,6 @@ def rk_log_likelihood(ratings, matchups, outcomes, theta=1.0):
     prob_1_win, prob_draw, prob_2_win = calc_probs_rk(
         ratings,
         matchups,
-        outcomes,
         theta=theta
     )
     win_1_mask = outcomes == 1.0

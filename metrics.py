@@ -22,7 +22,6 @@ def rk_accuracy(ratings, matchups, outcomes, theta=1.0):
     prob_1_win, prob_draw, prob_2_win = calc_probs_rk(
         ratings,
         matchups,
-        outcomes,
         theta=theta
     )
     probs = np.hstack([prob_1_win[:,None], prob_draw[:,None], prob_2_win[:,None]])
