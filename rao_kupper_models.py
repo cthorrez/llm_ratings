@@ -133,7 +133,7 @@ def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
 
     # do negative sign since it's the NEGATIVE log likelihood
     grad *= -1
-    grad = (grad[:,:,None] * schedule_mask).mean(axis=(0,1))
+    grad = (grad[:,:,None] * schedule_mask).sum(axis=(0,1)) / outcomes.shape[0]
     
     # grad = np.exp(ratings) * grad
     return loss, grad
