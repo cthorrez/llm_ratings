@@ -94,7 +94,7 @@ def calc_probs_rk(ratings, matchups, theta=1.0):
     return prob_1_win, prob_draw, prob_2_win
 
 def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
-    pi = ratings
+    # pi = ratings
     pi = np.exp(ratings)
     pi_1 = pi[matchups[:,0]]
     pi_2 = pi[matchups[:,1]]
@@ -135,7 +135,7 @@ def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
     grad *= -1
     grad = (grad[:,:,None] * schedule_mask).sum(axis=(0,1)) / outcomes.shape[0]
     
-    # grad = np.exp(ratings) * grad
+    grad = np.exp(ratings) * grad
     return loss, grad
 
    

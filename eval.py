@@ -97,7 +97,7 @@ def eval_seed(df, seed=0, verbose=False):
     print('')
 
     theta = 2.0
-    max_iter = 1000
+    max_iter = 10
     ilsr_fn = partial(get_ilsr_ratings, theta=theta, max_iter=max_iter, eps=1e-6)
     print(f'evaluating ilsr rk {theta=}, {max_iter=}')
     ilsr_metrics, ilsr_ratings = rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, theta=theta)
@@ -122,8 +122,8 @@ def eval_seed(df, seed=0, verbose=False):
 if __name__ == '__main__':
     df = load()
     metrics = []
-    for seed in range(25):
-        seed_metrics = eval_seed(df, seed=seed, verbose=False)
+    for seed in range(1):
+        seed_metrics = eval_seed(df, seed=seed, verbose=True)
         metrics.extend(seed_metrics)
     metrics_df = pd.DataFrame(metrics)
     print(metrics_df.groupby(['method']).mean())

@@ -5,8 +5,8 @@ from jax import grad, jit, value_and_grad
 
 
 def rk_loss_fn(ratings, matchups, outcomes, theta, eps=1e-6):
-    # pi = jnp.exp(ratings)
-    pi = ratings
+    # pi = ratings
+    pi = jnp.exp(ratings)
     pi_1 = pi[matchups[:,0]]
     pi_2 = pi[matchups[:,1]]
     denom_1 = pi_1 + (theta * pi_2)
@@ -27,8 +27,8 @@ def rk_loss_fn(ratings, matchups, outcomes, theta, eps=1e-6):
     return loss
 
 def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
-    # pi = np.exp(ratings)
-    pi = ratings
+    # pi = ratings
+    pi = np.exp(ratings)
     pi_1 = pi[matchups[:,0]]
     pi_2 = pi[matchups[:,1]]
     n_competitors = ratings.shape[0]
@@ -72,7 +72,7 @@ def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
     grad_sum = grad_expanded.sum(axis=(0,1))
     grad_mean = grad_sum / outcomes.shape[0]
     
-    # grad = np.exp(ratings) * grad
+    grad_mean = np.exp(ratings) * grad_mean
     return loss, grad_mean
 
 
@@ -84,11 +84,13 @@ def main():
     epsilon = 1e-6
 
     rk_loss, rk_grad = rk_loss_and_grad(ratings, matchups, outcomes, theta, epsilon)
+    print('mine')
     print(rk_loss)
     print(rk_grad)
 
     jax_rk_loss_and_grad = value_and_grad(rk_loss_fn, argnums=[0])
     jax_rk_loss, jax_rk_grad = jax_rk_loss_and_grad(ratings, matchups, outcomes, theta, epsilon)
+    print('auto')
     print(jax_rk_loss)
     print(jax_rk_grad[0])
 
