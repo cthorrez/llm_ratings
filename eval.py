@@ -7,7 +7,7 @@ from likelihoods import bt_log_likelihood, rk_log_likelihood
 from bradley_terry_models import get_bt_ratings_lbfgs
 from rao_kupper_models import get_rao_kupper_ratings, get_rk_ratings_lbfgs
 from luce_models import get_ilsr_ratings
-from elo import get_elo_ratings
+from elo import get_elo_ratings, get_bootstrap_elo_ratings
 from metrics import bt_accuracy, rk_accuracy
 
 
@@ -87,6 +87,13 @@ def eval_seed(df, seed=0, verbose=False):
     if verbose: print_top_k(elo_ratings, competitors)
     print('')
 
+    bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=20, k=k)
+    print(f'evaluating bootstrap elo: {k=}, {base=}, {scale=}')
+    bootstrap_elo_metrics, bootstrap_elo_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, bootstrap_elo_fn, base, scale)
+    bootstrap_elo_metrics['method'] = 'bootstrap elo'
+    if verbose: print_top_k(bootstrap_elo_ratings, competitors)
+    print('')
+
     base = math.e
     scale=1.0
     bt_fn = partial(get_bt_ratings_lbfgs, base=base, scale=scale)
@@ -113,7 +120,7 @@ def eval_seed(df, seed=0, verbose=False):
     print('')
 
 
-    metrics = [elo_metrics, bt_metrics, ilsr_metrics, rk_metrics]
+    metrics = [elo_metrics, bootstrap_elo_metrics, bt_metrics, ilsr_metrics, rk_metrics]
     for metric in metrics:
         metric['seed'] = seed
     return metrics
@@ -122,8 +129,9 @@ def eval_seed(df, seed=0, verbose=False):
 if __name__ == '__main__':
     df = load()
     metrics = []
-    for seed in range(1):
-        seed_metrics = eval_seed(df, seed=seed, verbose=True)
+    num_seeds = 10
+    for seed in range(num_seeds):
+        seed_metrics = eval_seed(df, seed=seed, verbose=False)
         metrics.extend(seed_metrics)
     metrics_df = pd.DataFrame(metrics)
     print(metrics_df.groupby(['method']).mean())
