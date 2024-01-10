@@ -2,7 +2,7 @@ import math
 from functools import partial
 import numpy as np
 import pandas as pd
-from data_utils import load, split, preprocess, print_top_k
+from data_utils import split, preprocess, print_top_k
 from likelihoods import bt_log_likelihood, rk_log_likelihood
 from bradley_terry_models import get_bt_ratings_lbfgs
 from rao_kupper_models import get_rao_kupper_ratings, get_rk_ratings_lbfgs
@@ -87,7 +87,7 @@ def eval_seed(df, seed=0, verbose=False):
     if verbose: print_top_k(elo_ratings, competitors)
     print('')
 
-    bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=20, k=k)
+    bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=100, k=k)
     print(f'evaluating bootstrap elo: {k=}, {base=}, {scale=}')
     bootstrap_elo_metrics, bootstrap_elo_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, bootstrap_elo_fn, base, scale)
     bootstrap_elo_metrics['method'] = 'bootstrap elo'
@@ -127,9 +127,9 @@ def eval_seed(df, seed=0, verbose=False):
 
 
 if __name__ == '__main__':
-    df = load()
+    df = pd.read_json('chatbot_arena_conversations_july_.json', lines=True)
     metrics = []
-    num_seeds = 10
+    num_seeds = 100
     for seed in range(num_seeds):
         seed_metrics = eval_seed(df, seed=seed, verbose=False)
         metrics.extend(seed_metrics)

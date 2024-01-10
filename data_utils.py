@@ -3,10 +3,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from riix.utils.data_utils import RatingDataset
 
-def load(path='clean_battle_anony_20231206.json'):
-    df = matches = pd.read_json(path)
-    df['outcome'] = df['winner'].map({'model_a': 1.0, 'model_b': 0.0}).fillna(0.5)
-    return df
 
 def split(df, test_size=0.2, seed=0, shuffle=False):
     train_df, test_df = train_test_split(
@@ -28,7 +24,7 @@ def preprocess(df):
         competitor_cols=['model_a', 'model_b'],
         outcome_col='outcome',
         timestamp_col='tstamp',
-        verbose=False,
+        verbose=True,
     )
     matchups = dataset.matchups
     outcomes = dataset.outcomes
