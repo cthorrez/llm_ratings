@@ -7,7 +7,6 @@ from scipy.special import expit
 from sklearn.utils.optimize import _newton_cg
 from riix.utils.data_utils import RatingDataset
 from riix.metrics import binary_metrics_suite
-from models import bt_loss_and_grad, bt_hess_vec_prod, bt_f_grad_hess
 from opt import diag_hess_newtons_method
 
 

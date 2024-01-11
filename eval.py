@@ -127,12 +127,19 @@ def eval_seed(df, seed=0, verbose=False):
 
 
 if __name__ == '__main__':
-    df1 = pd.read_json('chatbot_arena_conversations_july.json', lines=True).drop_duplicates()
-    df2 = pd.read_json('chatbot_arena_conversations_december.json', lines=True).drop_duplicates()
-    df = pd.concat([df1, df2]).drop_duplicates()
+    df1 = pd.read_json('chatbot_arena_conversations_jul_2023.json', lines=True).drop_duplicates()
+    df2 = pd.read_json('chatbot_arena_conversations_dec_2023.json', lines=True).drop_duplicates()
+    df3 = pd.read_json('chatbot_arena_conversations_jan_2024.json', lines=True).drop_duplicates()
+    print(len(df1))
+    print(len(df2))
+    print(len(df3))
+    print(f'total:{len(df1) + len(df2) + len(df3)}')
+    df = pd.concat([df1, df2, df3]).drop_duplicates()
+    print(len(df))
+
 
     metrics = []
-    num_seeds = 1
+    num_seeds = 10
     for seed in range(num_seeds):
         seed_metrics = eval_seed(df, seed=seed, verbose=False)
         metrics.extend(seed_metrics)

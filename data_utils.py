@@ -13,7 +13,7 @@ def split(df, test_size=0.2, seed=0, shuffle=False):
     )
     return train_df, test_df
 
-def load_and_split(path='clean_battle_anony_20231206.json', test_size=0.2, seed=0, shuffle=False):
+def load_and_split(path, test_size=0.2, seed=0, shuffle=False):
     df = load(path)
     train_df, test_df = split(df, test_size, seed, shuffle)
     return train_df, test_df
