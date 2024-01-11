@@ -11,6 +11,65 @@ from models import bt_loss_and_grad, bt_hess_vec_prod, bt_f_grad_hess
 from opt import diag_hess_newtons_method
 
 
+def bt_loss_and_grad(ratings, matchups, outcomes, base=10., s=400., eps=1e-6):
+    n_competitors = ratings.shape[0]
+    # mask of shape [num_matchups, 2, num_competitors]
+    schedule_mask = np.equal(matchups[:, :, None], np.arange(n_competitors)[None,:])
+    rating_diff = ratings[matchups[:,1]] - ratings[matchups[:,0]]
+    probs = 1.0 / (1.0 + np.power(base, rating_diff / s))
+    probs = np.clip(probs, eps, 1 - eps)
+    loss_array = -(outcomes * np.log(probs)) - ((1.0 - outcomes) * np.log(1.0 - probs))
+    loss = loss_array.mean()
+    grad = (outcomes - probs)[:,None]
+    grad = np.repeat(grad,  axis=1, repeats=2)
+    grad[:,0] *= -1.0
+    grad = (grad[:,:,None] * schedule_mask).mean(axis=(0,1))
+    return loss, grad
+
+def bt_hess_vec_prod(ratings, vec, matchups, outcomes, base=10., s=400., eps=1e-6):
+    n_competitors = ratings.shape[0]
+    # mask of shape [num_matchups, 2, num_competitors]
+    schedule_mask = np.equal(matchups[:, :, None], np.arange(n_competitors)[None,:])
+    rating_diff = ratings[matchups[:,1]] - ratings[matchups[:,0]]
+    probs = 1.0 / (1.0 + np.power(base, rating_diff / s))
+    probs = np.clip(probs, eps, 1 - eps)
+    hess_diag = ((probs * (1.0 - probs))[:,None,None] * schedule_mask).mean(axis=(0,1))
+    return hess_diag * vec
+
+def bt_grad_hess(ratings, vec, matchups, outcomes, base=10., s=400., eps=1e-6):
+    n_competitors = ratings.shape[0]
+    # mask of shape [num_matchups, 2, num_competitors]
+    schedule_mask = np.equal(matchups[:, :, None], np.arange(n_competitors)[None,:])
+    rating_diff = ratings[matchups[:,1]] - ratings[matchups[:,0]]
+    probs = 1.0 / (1.0 + np.power(base, rating_diff / s))
+    probs = np.clip(probs, eps, 1 - eps)
+    grad = (outcomes - probs)[:,None]
+    grad = np.repeat(grad,  axis=1, repeats=2)
+    grad[:,0] *= -1.0
+    grad = (grad[:,:,None] * schedule_mask).mean(axis=(0,1))
+    hess_diag = ((probs * (1.0 - probs))[:,None,None] * schedule_mask).mean(axis=(0,1))
+    def hvp(x):
+        return hess_diag * x
+    return grad, hvp
+
+def bt_f_grad_hess(ratings, matchups, outcomes, base=10., s=400., eps=1e-6):
+    n_competitors = ratings.shape[0]
+    # mask of shape [num_matchups, 2, num_competitors]
+    schedule_mask = np.equal(matchups[:, :, None], np.arange(n_competitors)[None,:])
+    rating_diff = ratings[matchups[:,1]] - ratings[matchups[:,0]]
+    probs = 1.0 / (1.0 + np.power(base, rating_diff / s))
+    probs = np.clip(probs, eps, 1 - eps)
+    loss_array = -(outcomes * np.log(probs)) - ((1.0 - outcomes) * np.log(1.0 - probs))
+    loss = loss_array.mean()
+    grad = (outcomes - probs)[:,None]
+    grad = np.repeat(grad,  axis=1, repeats=2)
+    grad[:,0] *= -1.0
+    grad = (grad[:,:,None] * schedule_mask).mean(axis=(0,1))
+    hess_diag = ((probs * (1.0 - probs))[:,None,None] * schedule_mask).mean(axis=(0,1))
+    return loss, grad, hess_diag
+
+
+
 def calc_probs_bt(matchups, ratings, base, scale):
     alpha = math.log(base) / scale
     all_ratings = ratings[matchups]
@@ -50,48 +109,3 @@ def get_bt_probs_newtoncg(matchups, outcomes, base=10., s=400.0):
     )['x']
     probs = calc_probs_bt(matchups, ratings, base=base, s=s)
     return probs
-
-
-def main():
-    matches = pd.read_json('clean_battle_anony_20231206.json')
-    matches['outcome'] = matches['winner'].map({'model_a': 1.0, 'model_b': 0.0}).fillna(0.5)
-    # matches = matches[~matches["winner"].str.contains("tie")].reset_index()
-    
-    dataset = RatingDataset(
-        df=matches,
-        competitor_cols=['model_a', 'model_b'],
-        outcome_col='outcome',
-        timestamp_col='tstamp',
-    )
-
-    ratings = np.zeros(dataset.num_competitors)
-    matchups = dataset.matchups
-    outcomes = dataset.outcomes
-
-    fit_ratings = minimize(
-        fun=partial(bt_loss_and_grad, base=math.e, s=1.0),
-        x0=ratings,
-        args = (matchups, outcomes),
-        method='L-BFGS-B',
-        jac=True,
-        hessp=partial(bt_hess_vec_prod, base=math.e, s=1.0),
-        options={'disp' : False}
-    )
-    # print(fit_ratings)
-    fit_ratings = fit_ratings['x']
-
-    # fit_ratings = diag_hess_newtons_method(
-    #     x0=ratings,
-    #     f_grad_hess=bt_f_grad_hess,
-    #     args={'matchups' : matchups, 'outcomes': outcomes},
-    # )
-    # idxs = np.argsort(-fit_ratings)
-    # for idx in range(idxs.shape[0]):
-    #     print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{fit_ratings[idxs[idx]]}')
-
-    probs = calc_probs_bt(matchups, fit_ratings)
-    metrics = binary_metrics_suite(probs, outcomes)
-    print(f'{metrics=}')
-
-if __name__ == '__main__':
-    main()

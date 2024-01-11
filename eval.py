@@ -127,9 +127,12 @@ def eval_seed(df, seed=0, verbose=False):
 
 
 if __name__ == '__main__':
-    df = pd.read_json('chatbot_arena_conversations_july_.json', lines=True)
+    df1 = pd.read_json('chatbot_arena_conversations_july.json', lines=True).drop_duplicates()
+    df2 = pd.read_json('chatbot_arena_conversations_december.json', lines=True).drop_duplicates()
+    df = pd.concat([df1, df2]).drop_duplicates()
+
     metrics = []
-    num_seeds = 100
+    num_seeds = 1
     for seed in range(num_seeds):
         seed_metrics = eval_seed(df, seed=seed, verbose=False)
         metrics.extend(seed_metrics)
