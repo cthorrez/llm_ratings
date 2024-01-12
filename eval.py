@@ -120,12 +120,12 @@ if __name__ == '__main__':
     print(f'total:{len(df1) + len(df2) + len(df3)}')
     df = pd.concat([df1, df2, df3]).drop_duplicates()
     print(len(df))
-
+    df = df3
 
     metrics = []
-    num_seeds = 10
+    num_seeds = 25
     for seed in range(num_seeds):
-        seed_metrics = eval_seed(df, seed=seed, verbose=False)
+        seed_metrics = eval_seed(df, seed=seed+42, verbose=False)
         metrics.extend(seed_metrics)
     metrics_df = pd.DataFrame(metrics)
     print(metrics_df.groupby(['method']).mean())
