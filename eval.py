@@ -70,7 +70,7 @@ def eval_seed(df, seed=0, verbose=False):
     if verbose: print_top_k(elo_ratings, competitors)
     print('')
 
-    num_boot = 200
+    num_boot = 100
     bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=num_boot, k=k, seed=seed)
     print(f'evaluating bootstrap elo: {k=}, {base=}, {scale=}')
     bootstrap_elo_metrics, bootstrap_elo_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, bootstrap_elo_fn, 'bt', base=base, scale=scale)

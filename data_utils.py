@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from riix.utils.data_utils import RatingDataset
 
 
 def split(df, test_size=0.2, seed=0, shuffle=False):
@@ -19,16 +18,13 @@ def load_and_split(path, test_size=0.2, seed=0, shuffle=False):
     return train_df, test_df
 
 def preprocess(df):
-    dataset = RatingDataset(
-        df=df,
-        competitor_cols=['model_a', 'model_b'],
-        outcome_col='outcome',
-        timestamp_col='tstamp',
-        verbose=True,
-    )
-    matchups = dataset.matchups
-    outcomes = dataset.outcomes
-    competitors = dataset.idx_to_competitor
+    competitors = sorted(pd.unique(df[['model_a', 'model_b']].astype(str).values.ravel('K')).tolist())
+    num_competitors = len(competitors)
+    competitor_to_idx = {comp: idx for idx, comp in enumerate(competitors)}
+    matchups = df[['model_a', 'model_b']].map(lambda comp: competitor_to_idx[str(comp)]).values.astype(np.int64)
+    outcomes = df['outcome'].values.astype(np.float64)
+    print(f'num matchups: {matchups.shape[0]}')
+    print(f'num competitors: {num_competitors}')
     return matchups, outcomes, competitors
 
 def print_top_k(ratings, competitors, k=100):
