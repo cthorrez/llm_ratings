@@ -8,6 +8,20 @@ import pandas as pd
 from riix.models.elo import Elo
 from scipy.special import expit as sigmoid
 
+
+def get_elo_ratings(matchups, outcomes, k, base=math.e, scale=1.0):
+    num_competitors = np.max(matchups) + 1
+    model = Elo(
+        num_competitors=num_competitors,
+        initial_rating=0.0,
+        k=k,
+        alpha=math.log(base) / scale,
+        update_method='iterative'
+    )
+    _ = model.fit(time_step=0, matchups=matchups, outcomes=outcomes)
+    return model.ratings
+
+
 class VectorizedElo():
     """Fit multiple Elo models at the same time for bootstrapping ;)"""
     def __init__(self, num_competitors, num_models, k=4.0, base=10.0, scale=400.0):
@@ -34,9 +48,8 @@ class VectorizedElo():
             self.ratings[model_idxs,c2] -= updates
         return np.mean(self.ratings, axis=0)
 
-
-def get_bootstrap_elo_ratings_vec(matchups, outcomes, k, base=10.0, scale=400.0, num_bootstrap=100):
-    rng = np.random.default_rng(seed=42)
+def get_bootstrap_elo_ratings(matchups, outcomes, k, base=10.0, scale=400.0, num_bootstrap=100, seed=0):
+    rng = np.random.default_rng(seed=seed)
     num_matchups = matchups.shape[0]
     idxs = rng.choice(np.arange(num_matchups), size=(num_bootstrap,num_matchups), replace=True)
     boot_matchups = matchups[idxs]
@@ -53,34 +66,3 @@ def get_bootstrap_elo_ratings_vec(matchups, outcomes, k, base=10.0, scale=400.0,
     return ratings
 
 
-def get_elo_ratings(matchups, outcomes, k, base=math.e, scale=1.0):
-    num_competitors = np.max(matchups) + 1
-    model = Elo(
-        num_competitors=num_competitors,
-        initial_rating=0.0,
-        k=k,
-        alpha=math.log(base) / scale,
-        update_method='iterative'
-    )
-    _ = model.fit(time_step=0, matchups=matchups, outcomes=outcomes)
-    return model.ratings
-
-def get_bootstrap_elo_ratings(matchups, outcomes, k, base=math.e, scale=1.0, num_bootstrap=100):
-    num_matchups = matchups.shape[0]
-    num_competitors = np.max(matchups) + 1
-    all_ratings = np.zeros(shape=(num_bootstrap, num_competitors))
-    for sample_idx in range(num_bootstrap):
-        rng = np.random.default_rng(seed=sample_idx)
-        idxs = rng.choice(np.arange(num_matchups), size=num_matchups, replace=True)
-        sample_matchups = matchups[idxs]
-        sample_outcomes = outcomes[idxs]
-        model = Elo(
-            num_competitors=num_competitors,
-            initial_rating=0.0,
-            k=k,
-            alpha=math.log(base) / scale,
-            update_method='iterative'
-        )
-        _ = model.fit(time_step=0, matchups=sample_matchups, outcomes=sample_outcomes)
-        all_ratings[sample_idx,:] = model.ratings
-    return np.mean(all_ratings, axis=0)

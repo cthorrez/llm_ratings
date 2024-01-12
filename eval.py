@@ -1,3 +1,4 @@
+import time
 import math
 from functools import partial
 import numpy as np
@@ -7,7 +8,7 @@ from likelihoods import bt_log_likelihood, rk_log_likelihood
 from bradley_terry_models import get_bt_ratings_lbfgs
 from rao_kupper_models import get_rao_kupper_ratings, get_rk_ratings_lbfgs
 from luce_models import get_ilsr_ratings
-from elo import get_elo_ratings, get_bootstrap_elo_ratings, get_bootstrap_elo_ratings_vec
+from elo import get_elo_ratings, get_bootstrap_elo_ratings
 from metrics import bt_accuracy, rk_accuracy
 
 
@@ -21,6 +22,7 @@ def bt_eval(
     scale=1.0,
     print_ranking=False,
 ):
+    start_time = time.time()
     ratings = get_ratings_fn(train_matchups, train_outcomes, base=base, scale=scale)
     train_nll = -bt_log_likelihood(ratings, train_matchups, train_outcomes, base=base, scale=scale)
     test_nll = -bt_log_likelihood(ratings, test_matchups, test_outcomes, base=base, scale=scale)    
@@ -37,7 +39,8 @@ def bt_eval(
         'test_nll' : test_nll,
         'train_acc' : train_acc,
         'test_acc' :  test_acc,
-        'test_acc_no_draw' : test_acc_no_draw
+        'test_acc_no_draw' : test_acc_no_draw,
+        'duration (s)' :  time.time() - start_time
     }
     return metrics, ratings
 
@@ -50,6 +53,7 @@ def rk_eval(
     get_ratings_fn,
     theta=1.0,
 ):
+    start_time = time.time()
     ratings = get_ratings_fn(train_matchups, train_outcomes, theta=theta)
     train_nll = -rk_log_likelihood(ratings, train_matchups, train_outcomes, theta=theta)
     test_nll = -rk_log_likelihood(ratings, test_matchups, test_outcomes, theta=theta)
@@ -65,7 +69,8 @@ def rk_eval(
         'test_nll' : test_nll,
         'train_acc' : train_acc,
         'test_acc' :  test_acc,
-        'test_acc_no_draw' : test_acc_no_draw
+        'test_acc_no_draw' : test_acc_no_draw,
+        'duration (s)' : time.time() - start_time
     }
     return metrics, ratings
 
@@ -87,14 +92,8 @@ def eval_seed(df, seed=0, verbose=False):
     if verbose: print_top_k(elo_ratings, competitors)
     print('')
 
-    bootstrap_elo_vec_fn = partial(get_bootstrap_elo_ratings_vec, num_bootstrap=100, k=k)
-    print(f'evaluating bootstrap elo vec: {k=}, {base=}, {scale=}')
-    bootstrap_elo_vec_metrics, bootstrap_elo_vec_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, bootstrap_elo_vec_fn, base, scale)
-    bootstrap_elo_vec_metrics['method'] = 'bootstrap elo vec'
-    if verbose: print_top_k(bootstrap_elo_vec_ratings, competitors)
-    print('')
-
-    bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=100, k=k)
+    num_boot = 100
+    bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=num_boot, k=k, seed=seed)
     print(f'evaluating bootstrap elo: {k=}, {base=}, {scale=}')
     bootstrap_elo_metrics, bootstrap_elo_ratings = bt_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, bootstrap_elo_fn, base, scale)
     bootstrap_elo_metrics['method'] = 'bootstrap elo'
@@ -110,8 +109,8 @@ def eval_seed(df, seed=0, verbose=False):
     if verbose: print_top_k(bt_ratings, competitors)
     print('')
 
-    theta = 1.9
-    max_iter = 10
+    theta = 2.0
+    max_iter = 100
     ilsr_fn = partial(get_ilsr_ratings, theta=theta, max_iter=max_iter, eps=1e-6)
     print(f'evaluating ilsr rk {theta=}, {max_iter=}')
     ilsr_metrics, ilsr_ratings = rk_eval(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, theta=theta)
@@ -127,7 +126,7 @@ def eval_seed(df, seed=0, verbose=False):
     print('')
 
 
-    metrics = [elo_metrics, bootstrap_elo_metrics, bootstrap_elo_vec_metrics ,bt_metrics, ilsr_metrics, rk_metrics]
+    metrics = [elo_metrics, bootstrap_elo_metrics, bt_metrics, ilsr_metrics, rk_metrics]
     for metric in metrics:
         metric['seed'] = seed
     return metrics
