@@ -1,8 +1,8 @@
+import math
 import numpy as np
+from scipy.special import expit as sigmoid
 import jax.numpy as jnp
 from jax import grad, jit, value_and_grad
-
-
 
 def rk_loss_fn(ratings, matchups, outcomes, theta, eps=1e-6):
     # pi = ratings
@@ -76,12 +76,42 @@ def rk_loss_and_grad(ratings, matchups, outcomes, theta, eps=1e-6):
     return loss, grad_mean
 
 
+def bt_loss_fn(ratings, matchups, outcomes, base=10., s=400., eps=1e-6):
+    n_competitors = ratings.shape[0]
+    # mask of shape [num_matchups, 2, num_competitors]
+    schedule_mask = jnp.equal(matchups[:, :, None], jnp.arange(n_competitors)[None,:])
+    rating_diff = ratings[matchups[:,1]] - ratings[matchups[:,0]]
+    probs = 1.0 / (1.0 + jnp.power(base, rating_diff / s))
+    probs = jnp.clip(probs, eps, 1 - eps)
+    loss_array = -(outcomes * jnp.log(probs)) - ((1.0 - outcomes) * jnp.log(1.0 - probs))
+    loss = loss_array.mean()
+    return loss
+
+
+def bt_loss_and_grad(ratings, matchups, outcomes, base=10., s=400., eps=1e-6):
+    n_competitors = ratings.shape[0]
+    # mask of shape [num_matchups, 2, num_competitors]
+    schedule_mask = np.equal(matchups[:, :, None], np.arange(n_competitors)[None,:])
+    rating_diff = ratings[matchups[:,0]] - ratings[matchups[:,1]]
+    alpha = np.log(base) / s
+    probs = sigmoid(alpha * rating_diff)
+    probs = np.clip(probs, eps, 1 - eps)
+    loss_array = -(outcomes * np.log(probs)) - ((1.0 - outcomes) * np.log(1.0 - probs))
+    loss = loss_array.mean()
+    grad = (outcomes - probs)[:,None]
+    grad = np.repeat(grad,  axis=1, repeats=2)
+    grad[:,0] *= -1.0
+    grad = (grad[:,:,None] * schedule_mask).sum(axis=(0,1)) / matchups.shape[0]
+    grad = grad * (np.log(base) / s)
+    return loss, grad
+
+
 def main():
-    ratings = np.array([0.0, 0.1, -0.1], dtype=np.float32) + 1.0
+    ratings = np.array([0.0, 0.1, -0.1], dtype=np.float64)
     matchups = np.array([[0,1],[1,2],[2,0],[1,0],[2,1]])
     outcomes = np.array([1.0, 0.5, 0.0, 1.0,0.5])
     theta = 2.0
-    epsilon = 1e-6
+    epsilon = 1e-8
 
     rk_loss, rk_grad = rk_loss_and_grad(ratings, matchups, outcomes, theta, epsilon)
     print('mine')
@@ -93,6 +123,19 @@ def main():
     print('auto')
     print(jax_rk_loss)
     print(jax_rk_grad[0])
+
+    base = 10.0
+    scale = 400.0
+    bt_loss, bt_grad = bt_loss_and_grad(ratings, matchups, outcomes, base, scale, epsilon)
+    print('mine')
+    print(bt_loss)
+    print(bt_grad)
+
+    jax_bt_loss_and_grad = value_and_grad(bt_loss_fn, argnums=[0])
+    jax_bt_loss, jax_bt_grad = jax_bt_loss_and_grad(ratings, matchups, outcomes, base, scale, epsilon)
+    print('auto')
+    print(jax_bt_loss)
+    print(jax_bt_grad[0])
 
 if __name__ == '__main__':
     main()

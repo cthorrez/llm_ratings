@@ -22,7 +22,7 @@ def bt_loss_and_grad(ratings, matchups, outcomes, base=10., s=400., eps=1e-6):
     grad = (outcomes - probs)[:,None]
     grad = np.repeat(grad,  axis=1, repeats=2)
     grad[:,0] *= -1.0
-    grad = (grad[:,:,None] * schedule_mask).mean(axis=(0,1))
+    grad = (grad[:,:,None] * schedule_mask).sum(axis=(0,1)) / matchups.shape[0]
     return loss, grad
 
 def bt_hess_vec_prod(ratings, vec, matchups, outcomes, base=10., s=400., eps=1e-6):

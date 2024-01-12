@@ -70,7 +70,7 @@ def eval_seed(df, seed=0, verbose=False):
     if verbose: print_top_k(elo_ratings, competitors)
     print('')
 
-    num_boot = 100
+    num_boot = 200
     bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=num_boot, k=k, seed=seed)
     print(f'evaluating bootstrap elo: {k=}, {base=}, {scale=}')
     bootstrap_elo_metrics, bootstrap_elo_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, bootstrap_elo_fn, 'bt', base=base, scale=scale)
@@ -79,7 +79,7 @@ def eval_seed(df, seed=0, verbose=False):
     print('')
 
     base = math.e
-    scale=1.0
+    scale = 1.0
     bt_fn = partial(get_bt_ratings_lbfgs, base=base, scale=scale)
     print(f'evaluating lbfgs bt {base=}, {scale=}')
     bt_metrics, bt_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, bt_fn, 'bt',  base=base, scale=scale)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
 
     metrics = []
-    num_seeds = 1
+    num_seeds = 10
     for seed in range(num_seeds):
         seed_metrics = eval_seed(df, seed=seed, verbose=False)
         metrics.extend(seed_metrics)
