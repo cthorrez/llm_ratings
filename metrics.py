@@ -3,7 +3,7 @@ import numpy as np
 from bradley_terry_models import calc_probs_bt
 from rao_kupper_models import calc_probs_rk
 
-def bt_accuracy(ratings, matchups, outcomes, draw_margin=0.0, base=math.e, scale=1.0):
+def bt_accuracy(ratings, matchups, outcomes, draw_margin=0.0, base=math.e, scale=1.0, **kwargs):
     probs = calc_probs_bt(
         matchups=matchups,
         ratings=ratings,
@@ -18,7 +18,7 @@ def bt_accuracy(ratings, matchups, outcomes, draw_margin=0.0, base=math.e, scale
     correct_draws = np.logical_and(preds==0.5, outcomes==0.5).sum()
     return (correct_wins + correct_losses + correct_draws) / matchups.shape[0]
 
-def rk_accuracy(ratings, matchups, outcomes, theta=1.0):
+def rk_accuracy(ratings, matchups, outcomes, theta=1.0, **kwargs):
     prob_1_win, prob_draw, prob_2_win = calc_probs_rk(
         ratings,
         matchups,
