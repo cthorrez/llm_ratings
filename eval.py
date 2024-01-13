@@ -59,22 +59,25 @@ def eval_seed(df, seed=0, verbose=False):
     test_matchups, test_outcomes, _ = preprocess(test_df)
     draw_rate = (train_outcomes == 0.5).mean()
     if verbose: print(f'{draw_rate=}')
+    metrics = []
 
     k = 4.0
     base = 10.0
     scale = 400.0
-    elo_fn = partial(get_elo_ratings, k=k)
-    print(f'evaluating elo: {k=}, {base=}, {scale=}')
-    elo_metrics, elo_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, elo_fn, 'bt', base=base, scale=scale)
-    elo_metrics['method'] = 'elo'
-    if verbose: print_top_k(elo_ratings, competitors)
-    print('')
+    # elo_fn = partial(get_elo_ratings, k=k)
+    # print(f'evaluating elo: {k=}, {base=}, {scale=}')
+    # elo_metrics, elo_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, elo_fn, 'bt', base=base, scale=scale)
+    # elo_metrics['method'] = 'elo'
+    # metrics.append(elo_metrics)
+    # if verbose: print_top_k(elo_ratings, competitors)
+    # print('')
 
     num_boot = 100
     bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=num_boot, k=k, seed=seed)
     print(f'evaluating bootstrap elo: {k=}, {base=}, {scale=}')
     bootstrap_elo_metrics, bootstrap_elo_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, bootstrap_elo_fn, 'bt', base=base, scale=scale)
     bootstrap_elo_metrics['method'] = 'bootstrap elo'
+    metrics.append(bootstrap_elo_metrics)
     if verbose: print_top_k(bootstrap_elo_ratings, competitors)
     print('')
 
@@ -84,6 +87,7 @@ def eval_seed(df, seed=0, verbose=False):
     print(f'evaluating lbfgs bt {base=}, {scale=}')
     bt_metrics, bt_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, bt_fn, 'bt',  base=base, scale=scale)
     bt_metrics['method'] = 'bt'
+    metrics.append(bt_metrics)
     if verbose: print_top_k(bt_ratings, competitors)
     print('')
 
@@ -93,18 +97,18 @@ def eval_seed(df, seed=0, verbose=False):
     print(f'evaluating ilsr rk {theta=}, {max_iter=}')
     ilsr_metrics, ilsr_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, 'rk', theta=theta)
     ilsr_metrics['method'] = 'ilsr'
+    metrics.append(ilsr_metrics)
     if verbose: print_top_k(ilsr_ratings, competitors)
     print('')
 
-    rk_fn = get_rk_ratings_lbfgs
-    print(f'evaluating rk lbfgs {theta=}')
-    rk_metrics, rk_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, rk_fn, 'rk', theta=theta)
-    rk_metrics['method'] = 'rk_lbfgs'
-    if verbose: print_top_k(rk_ratings, competitors)
-    print('')
+    # rk_fn = get_rk_ratings_lbfgs
+    # print(f'evaluating rk lbfgs {theta=}')
+    # rk_metrics, rk_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, rk_fn, 'rk', theta=theta)
+    # rk_metrics['method'] = 'rk_lbfgs'
+    # metrics.append(rk_metrics)
+    # if verbose: print_top_k(rk_ratings, competitors)
+    # print('')
 
-
-    metrics = [elo_metrics, bootstrap_elo_metrics, bt_metrics, ilsr_metrics, rk_metrics]
     for metric in metrics:
         metric['seed'] = seed
     return metrics
@@ -123,9 +127,9 @@ if __name__ == '__main__':
     df = df3
 
     metrics = []
-    num_seeds = 25
+    num_seeds = 500
     for seed in range(num_seeds):
-        seed_metrics = eval_seed(df, seed=seed+42, verbose=False)
+        seed_metrics = eval_seed(df, seed=seed, verbose=False)
         metrics.extend(seed_metrics)
     metrics_df = pd.DataFrame(metrics)
     print(metrics_df.groupby(['method']).mean())
