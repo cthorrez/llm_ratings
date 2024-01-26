@@ -17,12 +17,12 @@ def load_and_split(path, test_size=0.2, seed=0, shuffle=False):
     train_df, test_df = split(df, test_size, seed, shuffle)
     return train_df, test_df
 
-def preprocess(df):
-    competitors = sorted(pd.unique(df[['model_a', 'model_b']].astype(str).values.ravel('K')).tolist())
+def preprocess(df, competitor_cols=['model_a', 'model_b'], outcome_col=['outcome']):
+    competitors = sorted(pd.unique(df[competitor_cols].astype(str).values.ravel('K')).tolist())
     num_competitors = len(competitors)
     competitor_to_idx = {comp: idx for idx, comp in enumerate(competitors)}
-    matchups = df[['model_a', 'model_b']].map(lambda comp: competitor_to_idx[str(comp)]).values.astype(np.int64)
-    outcomes = df['outcome'].values.astype(np.float64)
+    matchups = df[competitor_cols].map(lambda comp: competitor_to_idx[str(comp)]).values.astype(np.int64)
+    outcomes = df[outcome_col].values.astype(np.float64)
     print(f'num matchups: {matchups.shape[0]}')
     print(f'num competitors: {num_competitors}')
     return matchups, outcomes, competitors

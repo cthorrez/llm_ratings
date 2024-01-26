@@ -4,7 +4,6 @@ import numpy as np
 from scipy.special import expit
 import pandas as pd
 from datasets import load_dataset
-from riix.utils.data_utils import RatingDataset
 from riix.eval import evaluate
 from riix.metrics import binary_metrics_suite
 from luce import wlsr_ties, mm_ties, ilsr_ties, imm_ties
@@ -59,71 +58,3 @@ def get_mm_probs(matchups, outcomes, theta=SQRT2, max_iter=1000):
     )
     probs = calc_probs_bt(matchups, ratings)
     return probs
-
-
-
-
-
-def main():
-    matches = pd.read_json('clean_battle_anony_20231206.json')
-    matches['outcome'] = matches['winner'].map({'model_a': 1.0, 'model_b': 0.0}).fillna(0.5)
-    # matches = matches[~matches["winner"].str.contains("tie")].reset_index()
-
-
-    # matches = matches.head(1000)
-
-    dataset = RatingDataset(
-        df=matches,
-        competitor_cols=['model_a', 'model_b'],
-        outcome_col='outcome',
-        timestamp_col='tstamp',
-        batch_size=1,
-    )
-    matchups = dataset.matchups
-    outcomes = dataset.outcomes
-
-    comparisons, ties = preprocess_for_luce(matchups, outcomes)
-    n = dataset.num_competitors
-
-    wlsr_ratings = wlsr_ties(
-        n=n,
-        comparisons=comparisons,
-        ties=ties
-    )
-    # idxs = np.argsort(-wlsr_ratings)
-    # for idx in range(idxs.shape[0]):
-    #     print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{wlsr_ratings[idxs[idx]]}')
-    wlsr_probs = calc_probs_bt(matchups, wlsr_ratings)
-    wlsr_metrics = binary_metrics_suite(wlsr_probs, outcomes)
-    print(f'{wlsr_metrics=}')
-
-    ilsr_ratings = ilsr_ties(
-        n=n,
-        comparisons=comparisons,
-        ties=ties,
-        tol=1e-8
-    )
-    # idxs = np.argsort(-wlsr_ratings)
-    # for idx in range(idxs.shape[0]):
-    #     print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{wlsr_ratings[idxs[idx]]}')
-    ilsr_probs = calc_probs_bt(matchups, ilsr_ratings)
-    ilsr_metrics = binary_metrics_suite(ilsr_probs, outcomes)
-    print(f'{ilsr_metrics=}')
-
-
-    mm_ratings = mm_ties(
-        n=n,
-        comparisons=comparisons,
-        ties=ties
-    )
-    # idxs = np.argsort(-mm_ratings)
-    # for idx in range(idxs.shape[0]):
-    #     print(f'{idx+1}: {dataset.idx_to_competitor[idxs[idx]]}\t\t{mm_ratings[idxs[idx]]}')
-    mm_probs = calc_probs_bt(matchups, mm_ratings)
-    mm_metrics = binary_metrics_suite(mm_probs, outcomes)
-    print(f'{mm_metrics=}')
-
-
-
-if __name__ == '__main__':
-    main()
