@@ -53,13 +53,10 @@ def evaluate(
     return metrics, ratings
 
 
-def eval_seed(df, seed=0, verbose=False):
+def eval_seed(df, seed=0, verbose=False, competitor_cols=['model_a', 'model_b'], outcome_col=['outcome']):
     train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=seed)
-    train_matchups, train_outcomes, competitors = preprocess(train_df)
-    test_matchups, test_outcomes, _ = preprocess(test_df)
-    print(train_matchups.shape, train_outcomes.shape)
-    print(test_matchups.shape, test_outcomes.shape)
-
+    train_matchups, train_outcomes, competitors = preprocess(train_df, competitor_cols, outcome_col)
+    test_matchups, test_outcomes, _ = preprocess(test_df, competitor_cols, outcome_col)
     draw_rate = (train_outcomes == 0.5).mean()
     if verbose: print(f'{draw_rate=}')
     metrics = []
