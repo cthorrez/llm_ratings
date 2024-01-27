@@ -57,6 +57,9 @@ def eval_seed(df, seed=0, verbose=False):
     train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=seed)
     train_matchups, train_outcomes, competitors = preprocess(train_df)
     test_matchups, test_outcomes, _ = preprocess(test_df)
+    print(train_matchups.shape, train_outcomes.shape)
+    print(test_matchups.shape, test_outcomes.shape)
+
     draw_rate = (train_outcomes == 0.5).mean()
     if verbose: print(f'{draw_rate=}')
     metrics = []
@@ -115,19 +118,13 @@ def eval_seed(df, seed=0, verbose=False):
 
 
 if __name__ == '__main__':
-    df1 = pd.read_json('chatbot_arena_conversations_jul_2023.json', lines=True).drop_duplicates()
-    df2 = pd.read_json('chatbot_arena_conversations_dec_2023.json', lines=True).drop_duplicates()
-    df3 = pd.read_json('chatbot_arena_conversations_jan_2024.json', lines=True).drop_duplicates()
-    print(len(df1))
-    print(len(df2))
-    print(len(df3))
-    print(f'total:{len(df1) + len(df2) + len(df3)}')
-    df = pd.concat([df1, df2, df3]).drop_duplicates()
-    print(len(df))
-    df = df3
+    # df = pd.read_json('chatbot_arena_hf.json', lines=True).drop_duplicates()
+    # df = pd.read_json('chatbot_arena_12-06-2023.json', lines=True).drop_duplicates()
+    df = pd.read_json('chatbot_arena_01-06-2024.json', lines=True).drop_duplicates()
+    # df = pd.read_json('chatbot_arena_01-26-2024.json', lines=True).drop_duplicates()
 
     metrics = []
-    num_seeds = 500
+    num_seeds = 25
     for seed in range(num_seeds):
         seed_metrics = eval_seed(df, seed=seed, verbose=False)
         metrics.extend(seed_metrics)

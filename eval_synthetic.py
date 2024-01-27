@@ -92,22 +92,22 @@ def eval_seed(df, seed=0, verbose=False, competitor_cols=['model_a', 'model_b'],
     print('')
 
     theta = 2.0
-    max_iter = 10
-    ilsr_fn = partial(get_ilsr_ratings, theta=theta, max_iter=max_iter, eps=1e-6)
-    print(f'evaluating ilsr rk {theta=}, {max_iter=}')
-    ilsr_metrics, ilsr_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, 'rk', theta=theta)
-    ilsr_metrics['method'] = 'ilsr'
-    metrics.append(ilsr_metrics)
-    if verbose: print_top_k(ilsr_ratings, competitors)
-    print('')
-
-    # rk_fn = get_rk_ratings_lbfgs
-    # print(f'evaluating rk lbfgs {theta=}')
-    # rk_metrics, rk_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, rk_fn, 'rk', theta=theta)
-    # rk_metrics['method'] = 'rk_lbfgs'
-    # metrics.append(rk_metrics)
-    # if verbose: print_top_k(rk_ratings, competitors)
+    # max_iter = 10
+    # ilsr_fn = partial(get_ilsr_ratings, theta=theta, max_iter=max_iter, eps=1e-6)
+    # print(f'evaluating ilsr rk {theta=}, {max_iter=}')
+    # ilsr_metrics, ilsr_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, 'rk', theta=theta)
+    # ilsr_metrics['method'] = 'ilsr'
+    # metrics.append(ilsr_metrics)
+    # if verbose: print_top_k(ilsr_ratings, competitors)
     # print('')
+
+    rk_fn = get_rk_ratings_lbfgs
+    print(f'evaluating rk lbfgs {theta=}')
+    rk_metrics, rk_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, rk_fn, 'rk', theta=theta)
+    rk_metrics['method'] = 'rk_lbfgs'
+    metrics.append(rk_metrics)
+    if verbose: print_top_k(rk_ratings, competitors)
+    print('')
 
     for metric in metrics:
         metric['seed'] = seed
@@ -120,16 +120,18 @@ if __name__ == '__main__':
     outcome_col = 'outcome'
     df = generate_matchup_data(
         num_matchups=100000,
-        num_competitors=100,
+        num_competitors=200,
         num_rating_periods=100,
-        skill_var=1.0,
-        outcome_noise_var=1.0,
-        draw_margin=0.0,
+        skill_sd=2.0,
+        outcome_noise_sd=1.5,
+        draw_margin=0.2,
         seed=seed
     )
+    draw_rate = (df['outcome'] == 0.5).mean()
+    print(f'{draw_rate=}')
 
     metrics = []
-    num_seeds = 20
+    num_seeds = 10
     for seed in range(num_seeds):
         seed_metrics = eval_seed(
             df,
