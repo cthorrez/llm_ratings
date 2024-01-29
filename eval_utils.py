@@ -74,7 +74,7 @@ def eval_seed(df, seed=0, verbose=False, competitor_cols=['model_a', 'model_b'],
 
     num_boot = 100
     bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=num_boot, k=k, seed=seed)
-    print(f'evaluating bootstrap elo: {k=}, {base=}, {scale=}')
+    print(f'evaluating bootstrap elo: {num_boot=}, {k=}, {base=}, {scale=}')
     bootstrap_elo_metrics, bootstrap_elo_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, bootstrap_elo_fn, 'bt', base=base, scale=scale)
     bootstrap_elo_metrics['method'] = 'bootstrap elo'
     metrics.append(bootstrap_elo_metrics)
@@ -113,17 +113,3 @@ def eval_seed(df, seed=0, verbose=False, competitor_cols=['model_a', 'model_b'],
         metric['seed'] = seed
     return metrics
 
-
-if __name__ == '__main__':
-    # df = pd.read_json('chatbot_arena_hf.json', lines=True).drop_duplicates()
-    # df = pd.read_json('chatbot_arena_12-06-2023.json', lines=True).drop_duplicates()
-    df = pd.read_json('chatbot_arena_01-06-2024.json', lines=True).drop_duplicates()
-    # df = pd.read_json('chatbot_arena_01-26-2024.json', lines=True).drop_duplicates()
-
-    metrics = []
-    num_seeds = 25
-    for seed in range(num_seeds):
-        seed_metrics = eval_seed(df, seed=seed, verbose=False)
-        metrics.extend(seed_metrics)
-    metrics_df = pd.DataFrame(metrics)
-    print(metrics_df.groupby(['method']).mean())

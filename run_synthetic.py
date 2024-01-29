@@ -11,7 +11,7 @@ from luce_models import get_ilsr_ratings
 from elo import get_elo_ratings, get_bootstrap_elo_ratings
 from metrics import bt_accuracy, rk_accuracy
 from riix.utils import generate_matchup_data
-from eval_chatbot_arena import eval_seed
+from eval_utils import eval_seed
 
 
 if __name__ == '__main__':
