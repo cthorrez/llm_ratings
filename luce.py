@@ -108,7 +108,9 @@ def wlsr_ties(n, comparisons, ties, weights=None, theta=SQRT_2):
         chain[a, b] += coeff * weights[a]
         chain[b, a] += coeff * weights[b]
     chain -= np.diag(chain.sum(axis=1))
-    return statdist(chain, method='eigenval')
+    return statdist(chain, method='kernel')
+    # return statdist(chain, method='eigenval')
+
 
 def ilsr_ties(n, comparisons, ties, weights=None, theta=SQRT_2, max_iter=1000, tol=1e-8, do_log_transform=False):
     chain = np.zeros((n, n), dtype=float)

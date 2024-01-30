@@ -53,8 +53,7 @@ def evaluate(
     return metrics, ratings
 
 
-def eval_seed(df, seed=0, verbose=False, competitor_cols=['model_a', 'model_b'], outcome_col=['outcome']):
-    train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=seed)
+def eval_seed(train_df, test_df, seed=0, verbose=False, competitor_cols=['model_a', 'model_b'], outcome_col=['outcome']):
     train_matchups, train_outcomes, competitors = preprocess(train_df, competitor_cols, outcome_col)
     test_matchups, test_outcomes, _ = preprocess(test_df, competitor_cols, outcome_col)
     draw_rate = (train_outcomes == 0.5).mean()
@@ -91,23 +90,23 @@ def eval_seed(df, seed=0, verbose=False, competitor_cols=['model_a', 'model_b'],
     if verbose: print_top_k(bt_ratings, competitors)
     print('')
 
-    theta = 2.0
-    max_iter = 10
-    ilsr_fn = partial(get_ilsr_ratings, theta=theta, max_iter=max_iter, eps=1e-6)
-    print(f'evaluating ilsr rk {theta=}, {max_iter=}')
-    ilsr_metrics, ilsr_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, 'rk', theta=theta)
-    ilsr_metrics['method'] = 'ilsr'
-    metrics.append(ilsr_metrics)
-    if verbose: print_top_k(ilsr_ratings, competitors)
-    print('')
-
-    # rk_fn = get_rk_ratings_lbfgs
-    # print(f'evaluating rk lbfgs {theta=}')
-    # rk_metrics, rk_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, rk_fn, 'rk', theta=theta)
-    # rk_metrics['method'] = 'rk_lbfgs'
-    # metrics.append(rk_metrics)
-    # if verbose: print_top_k(rk_ratings, competitors)
+    theta = 2.0 # 2.0 seems good
+    # max_iter = 100
+    # ilsr_fn = partial(get_ilsr_ratings, theta=theta, max_iter=max_iter, eps=1e-6)
+    # print(f'evaluating ilsr rk {theta=}, {max_iter=}')
+    # ilsr_metrics, ilsr_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, ilsr_fn, 'rk', theta=theta)
+    # ilsr_metrics['method'] = 'ilsr'
+    # metrics.append(ilsr_metrics)
+    # if verbose: print_top_k(ilsr_ratings, competitors)
     # print('')
+
+    rk_fn = get_rk_ratings_lbfgs
+    print(f'evaluating rk lbfgs {theta=}')
+    rk_metrics, rk_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, rk_fn, 'rk', theta=theta)
+    rk_metrics['method'] = 'rk_lbfgs'
+    metrics.append(rk_metrics)
+    if verbose: print_top_k(rk_ratings, competitors)
+    print('')
 
     for metric in metrics:
         metric['seed'] = seed

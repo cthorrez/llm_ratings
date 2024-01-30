@@ -18,23 +18,26 @@ if __name__ == '__main__':
     seed = 0
     competitor_cols = ['competitor_1', 'competitor_2']
     outcome_col = 'outcome'
-    df = generate_matchup_data(
-        num_matchups=100000,
-        num_competitors=200,
-        num_rating_periods=100,
-        skill_sd=2.0,
-        outcome_noise_sd=1.5,
-        draw_margin=0.2,
-        seed=seed
-    )
-    draw_rate = (df['outcome'] == 0.5).mean()
-    print(f'{draw_rate=}')
+
 
     metrics = []
-    num_seeds = 10
+    num_seeds = 25
     for seed in range(num_seeds):
+        df = generate_matchup_data(
+            num_matchups=10000,
+            num_competitors=50,
+            num_rating_periods=100,
+            skill_sd=1.0,
+            outcome_noise_sd=2.0,
+            draw_margin=0.2,
+            seed=seed
+        )
+        draw_rate = (df['outcome'] == 0.5).mean()
+        print(f'{draw_rate=}')
+        train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=seed)
         seed_metrics = eval_seed(
-            df,
+            train_df,
+            test_df,
             seed=seed,
             verbose=False,
             competitor_cols=competitor_cols,
