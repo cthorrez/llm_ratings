@@ -26,7 +26,6 @@ def rk_accuracy(ratings, matchups, outcomes, theta=1.0, **kwargs):
     )
     probs = np.hstack([prob_1_win[:,None], prob_draw[:,None], prob_2_win[:,None]])
     preds = 1.0 - (np.argmax(probs, axis=1) / 2.0) # map 0->1.0, 1->0.5, 2->0.0
-    print(f'predicted draw rate: {(preds==0.5).mean()}')
     correct_wins = np.logical_and(preds==1.0, outcomes==1.0).sum()
     correct_losses = np.logical_and(preds==0.0, outcomes==0.0).sum()
     correct_draws = np.logical_and(preds==0.5, outcomes==0.5).sum()

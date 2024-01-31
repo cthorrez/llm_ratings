@@ -69,8 +69,6 @@ def preprocess(df, competitor_cols=['model_a', 'model_b'], outcome_col=['outcome
     competitor_to_idx = {comp: idx for idx, comp in enumerate(competitors)}
     matchups = df[competitor_cols].map(lambda comp: competitor_to_idx[str(comp)]).values.astype(np.int64)
     outcomes = df[outcome_col].values.astype(np.float64).flatten()
-    print(f'num matchups: {matchups.shape[0]}')
-    print(f'num competitors: {num_competitors}')
     return matchups, outcomes, competitors
 
 def print_top_k(ratings, competitors, k=100):
