@@ -4,8 +4,6 @@ import numpy as np
 from scipy.special import expit
 import pandas as pd
 from datasets import load_dataset
-from riix.eval import evaluate
-from riix.metrics import binary_metrics_suite
 from luce import wlsr_ties, mm_ties, ilsr_ties, imm_ties
 
 SQRT2 = math.sqrt(2.0)

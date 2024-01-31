@@ -5,21 +5,7 @@ source from: https://colab.research.google.com/drive/1J2Wf7sxc9SVmGnSX_lImhT246p
 import math
 import numpy as np
 import pandas as pd
-from riix.models.elo import Elo
 from scipy.special import expit as sigmoid
-
-
-def get_elo_ratings(matchups, outcomes, k, base=math.e, scale=1.0):
-    num_competitors = np.max(matchups) + 1
-    model = Elo(
-        num_competitors=num_competitors,
-        initial_rating=0.0,
-        k=k,
-        alpha=math.log(base) / scale,
-        update_method='iterative'
-    )
-    _ = model.fit(time_step=0, matchups=matchups, outcomes=outcomes)
-    return model.ratings
 
 
 class VectorizedElo():

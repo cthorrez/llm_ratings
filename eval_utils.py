@@ -8,7 +8,7 @@ from likelihoods import bt_log_likelihood, rk_log_likelihood
 from bradley_terry_models import get_bt_ratings_lbfgs
 from rao_kupper_models import get_rao_kupper_ratings, get_rk_ratings_lbfgs
 from luce_models import get_ilsr_ratings
-from elo import get_elo_ratings, get_bootstrap_elo_ratings
+from elo import get_bootstrap_elo_ratings
 from metrics import bt_accuracy, rk_accuracy
 
 
@@ -63,13 +63,14 @@ def eval_seed(train_df, test_df, seed=0, verbose=False, competitor_cols=['model_
     k = 4.0
     base = 10.0
     scale = 400.0
-    # elo_fn = partial(get_elo_ratings, k=k)
-    # print(f'evaluating elo: {k=}, {base=}, {scale=}')
-    # elo_metrics, elo_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, elo_fn, 'bt', base=base, scale=scale)
-    # elo_metrics['method'] = 'elo'
-    # metrics.append(elo_metrics)
-    # if verbose: print_top_k(elo_ratings, competitors)
-    # print('')
+
+    elo_fn = partial(get_bootstrap_elo_ratings, k=k, num_bootstrap=1, seed=seed)
+    print(f'evaluating elo: {k=}, {base=}, {scale=}')
+    elo_metrics, elo_ratings = evaluate(train_matchups, train_outcomes, test_matchups, test_outcomes, elo_fn, 'bt', base=base, scale=scale)
+    elo_metrics['method'] = 'elo'
+    metrics.append(elo_metrics)
+    if verbose: print_top_k(elo_ratings, competitors)
+    print('')
 
     num_boot = 100
     bootstrap_elo_fn = partial(get_bootstrap_elo_ratings, num_bootstrap=num_boot, k=k, seed=seed)

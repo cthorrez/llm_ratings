@@ -5,7 +5,6 @@ import pandas as pd
 from scipy.optimize import minimize
 from scipy.special import expit
 from sklearn.utils.optimize import _newton_cg
-from riix.metrics import binary_metrics_suite
 from opt import diag_hess_newtons_method
 
 
