@@ -55,7 +55,7 @@ if __name__ == '__main__':
         'model': 'Rao Kupper',
         'function': get_rk_ratings_lbfgs,
         'args': {
-            'theta': 2.0,
+            'theta': 1.9,
             'likelihood': 'rk'
         }
     }

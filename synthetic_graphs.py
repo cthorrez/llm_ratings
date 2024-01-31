@@ -4,6 +4,7 @@ from tqdm import tqdm
 from functools import partial
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from data_utils import split, generate_matchup_data
 from eval_utils import eval_seed
 from elo import get_bootstrap_elo_ratings
@@ -97,7 +98,7 @@ if __name__ == '__main__':
         print(metrics_df)
         y_axis_vals.append(metrics_df['test_acc'])
 
-    plt.plot(config[x_axis_key], y_axis_vals)
+    plt.plot(data_generation_args[x_axis_key], y_axis_vals)
     plt.xlabel(x_axis_key)
     plt.ylabel('test_acc')
     plt.legend(metrics_df.index)
