@@ -55,14 +55,14 @@ if __name__ == '__main__':
         'model': 'Rao Kupper',
         'function': get_rk_ratings_lbfgs,
         'args': {
-            'theta': 1.9,
+            'theta': 1.7,
             'likelihood': 'rk'
         }
     }
     model_configs = [elo_config, bootstrap_elo_config, bradley_terry_config, rao_kupper_config]
 
     metrics = []
-    num_seeds = 10
+    num_seeds = 1
     for seed in tqdm(range(num_seeds)):
         seed_metrics = eval_seed(train_df, test_df, model_configs, seed=seed, verbose=False)
         metrics.extend(seed_metrics)

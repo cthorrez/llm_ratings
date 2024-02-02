@@ -6,7 +6,7 @@ import pandas as pd
 from data_utils import split, preprocess, print_top_k
 from likelihoods import bt_log_likelihood, rk_log_likelihood
 from bradley_terry_models import get_bt_ratings_lbfgs
-from rao_kupper_models import get_rao_kupper_ratings, get_rk_ratings_lbfgs
+from rao_kupper_models import get_rk_ratings_lbfgs
 from luce_models import get_ilsr_ratings
 from elo import get_bootstrap_elo_ratings
 from metrics import bt_accuracy, rk_accuracy
