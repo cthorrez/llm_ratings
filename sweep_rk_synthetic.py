@@ -22,7 +22,7 @@ if __name__ == '__main__':
             'likelihood': 'rk'
         }
     }
-    thetas_fit = np.linspace(start=1.001, stop=5.0, num=20, endpoint=True)
+    thetas_fit = np.linspace(start=1.001, stop=4.0, num=25, endpoint=True)
 
     bootstrap_elo_config = {
         'model': 'Bootstrap Elo',
@@ -48,34 +48,41 @@ if __name__ == '__main__':
 
     competitor_cols = ['competitor_1', 'competitor_2']
     theta_gen = 2.18
-    df = generate_matchup_data(
-        num_matchups=10000,
-        num_competitors=100,
-        strength_var=1.0,
-        strength_noise_var=0.0,
-        theta=theta_gen,
-        seed=seed
-    )
-    true_draw_rate = (df['outcome'] == 0.5).mean()
-    print(f'{true_draw_rate=}')
-    train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=seed)
-
-    # metric_key = 'test_acc'
-    metric_key = 'test_nll'
+    metric_key = 'test_acc'
+    # metric_key = 'test_nll'
     ys = []
-    baseline_metrics = eval_seed(train_df, test_df, baseline_configs, seed=seed, verbose=False, competitor_cols=competitor_cols,)
-    for baseline in baseline_metrics:
-        ys.append([baseline[metric_key]] * len(thetas_fit))
 
-    ys.append([])
-    for theta_fit in tqdm(thetas_fit):
-        current_rk_config = deepcopy(rao_kupper_config)
-        current_rk_config['args']['theta'] = theta_fit
+    num_seeds = 5
+    for seed in range(num_seeds):
+        seed_ys = []
+        df = generate_matchup_data(
+            num_matchups=10000,
+            num_competitors=100,
+            strength_var=1.0,
+            strength_noise_var=0.1,
+            theta=theta_gen,
+            seed=seed
+        )
+        true_draw_rate = (df['outcome'] == 0.5).mean()
+        print(f'{true_draw_rate=}')
+        train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=seed)
 
-        current_metrics = eval_seed(train_df, test_df, [current_rk_config], seed=0, verbose=False, competitor_cols=competitor_cols)[0]
-        ys[-1].append(current_metrics[metric_key])
+        baseline_metrics = eval_seed(train_df, test_df, baseline_configs, seed=seed, verbose=False, competitor_cols=competitor_cols,)
+        for baseline in baseline_metrics:
+            seed_ys.append([baseline[metric_key]] * len(thetas_fit))
+
+        seed_ys.append([])
+        for theta_fit in tqdm(thetas_fit):
+            current_rk_config = deepcopy(rao_kupper_config)
+            current_rk_config['args']['theta'] = theta_fit
+
+            current_metrics = eval_seed(train_df, test_df, [current_rk_config], seed=0, verbose=False, competitor_cols=competitor_cols)[0]
+            seed_ys[-1].append(current_metrics[metric_key])
     
-    ys = np.array(ys).T
+        seed_ys = np.array(seed_ys).T
+        ys.append(seed_ys)
+
+    ys = np.array(ys).mean(axis=0)
 
     plt.plot(thetas_fit, ys)
     plt.xlabel('theta')
