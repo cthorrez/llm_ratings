@@ -80,3 +80,29 @@ def eval_seed(
     for metric in metrics:
         metric['seed'] = seed
     return metrics
+
+def eval_seeds(
+    train_df,
+    test_df,
+    model_configs,
+    seeds=[0],
+    competitor_cols=['model_a', 'model_b'],
+    outcome_col=['outcome'],
+    verbose=False,
+    ):
+    
+    all_metrics = []
+    for seed in seeds:
+        seed_metrics = eval_seed(
+            train_df,
+            test_df,
+            model_configs,
+            seed=seed,
+            competitor_cols=competitor_cols,
+            outcome_col=outcome_col,
+            verbose=verbose,
+        )
+        all_metrics.extend(seed_metrics)
+    df = pd.DataFrame(all_metrics)
+    mean_metrics = df.groupby('model').mean().to_dict(orient='records')
+    return mean_metrics

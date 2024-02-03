@@ -15,6 +15,8 @@ if __name__ == '__main__':
     # df = pd.read_json('chatbot_arena_01-06-2024.json', lines=True).drop_duplicates()
     split_seed = 0
     df = pd.read_json('chatbot_arena_01-26-2024.json', lines=True).drop_duplicates()
+    true_draw_rate = (df['outcome'] == 0.5).mean()
+    print(f'{true_draw_rate=}')
     train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=split_seed)
 
     elo_config = {

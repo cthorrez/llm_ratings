@@ -10,9 +10,6 @@ from eval_utils import eval_seed
 from rao_kupper_models import get_rk_ratings_lbfgs
 
 if __name__ == '__main__':
-    # df = pd.read_json('chatbot_arena_hf.json', lines=True).drop_duplicates()
-    # df = pd.read_json('chatbot_arena_12-06-2023.json', lines=True).drop_duplicates()
-    # df = pd.read_json('chatbot_arena_01-06-2024.json', lines=True).drop_duplicates()
     split_seed = 0
     df = pd.read_json('chatbot_arena_01-26-2024.json', lines=True).drop_duplicates()
     train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=split_seed)
@@ -29,7 +26,7 @@ if __name__ == '__main__':
     metric_keys = ['train_acc', 'test_acc']
     # max_metric = False
     # metric_keys = ['train_nll', 'test_nll']
-    thetas = np.linspace(start=1.0001, stop=2.4, num=1000)
+    thetas = np.linspace(start=1.0001, stop=2.4, num=20)
     ys = []
     for theta in tqdm(thetas):
         current_config = deepcopy(rao_kupper_config)
