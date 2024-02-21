@@ -26,18 +26,22 @@ def preprocess_google_data(url, output_fname):
 if __name__ == '__main__':
     preprocess_hf_data('lmsys/chatbot_arena_conversations', 'chatbot_arena_hf')                      # 
     google_args = [
+        # {
+        #     'url' : 'https://drive.google.com/file/d/1vv_-tI_hGIJSraHUGRz_9P8ip3qUCD9E/view',
+        #     'date' : '12-06-2023'
+        # },
+        # {
+        #     'url' : 'https://drive.google.com/file/d/1jjJ8k3L-BzFKSevoGo6yaJ-jCjc2SCK1/view', 
+        #     'date' : '01-06-2024'
+        # },
+        # {
+        #     'url' : 'https://drive.google.com/file/d/1O3GGotY8I5d4xgxU-qQyizgKFjpSt4ta/view',
+        #     'date' : '01-26-2024'
+        # },
         {
-            'url' : 'https://drive.google.com/file/d/1vv_-tI_hGIJSraHUGRz_9P8ip3qUCD9E/view',
-            'date' : '12-06-2023'
+            'url' : 'https://drive.google.com/uc?id=1ZXiBRtADf9HZ8eEarIFTy-qrPNDUP_H0',
+            'date' : '02-15-2024'
         },
-        {
-            'url' : 'https://drive.google.com/file/d/1jjJ8k3L-BzFKSevoGo6yaJ-jCjc2SCK1/view', 
-            'date' : '01-06-2024'
-        },
-        {
-            'url' : 'https://drive.google.com/file/d/1O3GGotY8I5d4xgxU-qQyizgKFjpSt4ta/view',
-            'date' : '01-26-2024'
-        }
     ]
     for args in google_args:
         preprocess_google_data(

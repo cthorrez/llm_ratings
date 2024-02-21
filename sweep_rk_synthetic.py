@@ -13,6 +13,19 @@ from bradley_terry_models import get_bt_ratings_lbfgs
 from rao_kupper_models import get_rk_ratings_lbfgs
 
 if __name__ == '__main__':
+
+    df = generate_matchup_data(
+        num_matchups=10000,
+        num_competitors=100,
+        strength_var=1.0,
+        strength_noise_var=0.1,
+        theta=2.18,
+        seed=0
+    )
+    print(len(df))
+    exit(1)
+
+
     seed = 0
 
     rao_kupper_config = {
@@ -55,13 +68,14 @@ if __name__ == '__main__':
     num_seeds = 5
     for seed in range(num_seeds):
         seed_ys = []
+        print('yooooooooooo')
         df = generate_matchup_data(
             num_matchups=10000,
             num_competitors=100,
             strength_var=1.0,
             strength_noise_var=0.1,
-            theta=theta_gen,
-            seed=seed
+            theta=2.18,
+            seed=0
         )
         true_draw_rate = (df['outcome'] == 0.5).mean()
         print(f'{true_draw_rate=}')

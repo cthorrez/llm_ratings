@@ -3,6 +3,7 @@ from tqdm import tqdm
 from functools import partial
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import KFold
 from data_utils import split
 from eval_utils import eval_seed
 from elo import get_bootstrap_elo_ratings
@@ -13,11 +14,17 @@ if __name__ == '__main__':
     # df = pd.read_json('chatbot_arena_hf.json', lines=True).drop_duplicates()
     # df = pd.read_json('chatbot_arena_12-06-2023.json', lines=True).drop_duplicates()
     # df = pd.read_json('chatbot_arena_01-06-2024.json', lines=True).drop_duplicates()
-    split_seed = 0
-    df = pd.read_json('chatbot_arena_01-26-2024.json', lines=True).drop_duplicates()
-    true_draw_rate = (df['outcome'] == 0.5).mean()
-    print(f'{true_draw_rate=}')
-    train_df, test_df = split(df, test_size=0.2, shuffle=True, seed=split_seed)
+    # df = pd.read_json('chatbot_arena_01-26-2024.json', lines=True).drop_duplicates()
+    df = pd.read_json('chatbot_arena_02-15-2024.json', lines=True).drop_duplicates()
+    print(f'total matchups: {len(df)}')
+
+    draw_rate = (df['outcome'] == 0.5).mean()
+    print(f'overall draw rate: {draw_rate}')
+
+    seed = 0
+    n_splits = 10
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
+
 
     elo_config = {
         'model': 'Elo',
@@ -57,15 +64,15 @@ if __name__ == '__main__':
         'model': 'Rao Kupper',
         'function': get_rk_ratings_lbfgs,
         'args': {
-            'theta': 1.7,
+            'theta': 1.8,
             'likelihood': 'rk'
         }
     }
     model_configs = [elo_config, bootstrap_elo_config, bradley_terry_config, rao_kupper_config]
-
     metrics = []
-    num_seeds = 1
-    for seed in tqdm(range(num_seeds)):
+    for train_idxs, test_idxs in tqdm(kf.split(df), total=kf.get_n_splits()):
+        train_df = df.iloc[train_idxs]
+        test_df = df.iloc[test_idxs]
         seed_metrics = eval_seed(train_df, test_df, model_configs, seed=seed, verbose=False)
         metrics.extend(seed_metrics)
     metrics_df = pd.DataFrame(metrics)
