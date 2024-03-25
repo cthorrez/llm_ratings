@@ -37,7 +37,7 @@ def evaluate(
     train_acc = acc_fn(ratings, train_matchups, train_outcomes, **kwargs)
     test_acc = acc_fn(ratings, test_matchups, test_outcomes, **kwargs)
     mask = test_outcomes != 0.5
-    test_acc_no_draw = acc_fn(ratings, test_matchups[mask], test_outcomes[mask], **kwargs)
+    test_acc_no_draw = bt_accuracy(ratings, test_matchups[mask], test_outcomes[mask], **kwargs)
 
     metrics = {
         'train_nll' : train_nll,

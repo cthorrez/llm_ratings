@@ -15,14 +15,15 @@ if __name__ == '__main__':
     # df = pd.read_json('chatbot_arena_12-06-2023.json', lines=True).drop_duplicates()
     # df = pd.read_json('chatbot_arena_01-06-2024.json', lines=True).drop_duplicates()
     # df = pd.read_json('chatbot_arena_01-26-2024.json', lines=True).drop_duplicates()
-    df = pd.read_json('chatbot_arena_02-15-2024.json', lines=True).drop_duplicates()
+    # df = pd.read_json('chatbot_arena_02-15-2024.json', lines=True).drop_duplicates()
+    df = pd.read_json('chatbot_arena_03-15-2024.json', lines=True).drop_duplicates()
     print(f'total matchups: {len(df)}')
 
     draw_rate = (df['outcome'] == 0.5).mean()
     print(f'overall draw rate: {draw_rate}')
 
-    seed = 0
-    n_splits = 10
+    seed = 42
+    n_splits = 20
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
 
 
@@ -64,7 +65,7 @@ if __name__ == '__main__':
         'model': 'Rao Kupper',
         'function': get_rk_ratings_lbfgs,
         'args': {
-            'theta': 1.8,
+            'theta': 2.1,
             'likelihood': 'rk'
         }
     }
