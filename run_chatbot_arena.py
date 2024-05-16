@@ -16,7 +16,9 @@ if __name__ == '__main__':
     # df = pd.read_json('chatbot_arena_01-06-2024.json', lines=True).drop_duplicates()
     # df = pd.read_json('chatbot_arena_01-26-2024.json', lines=True).drop_duplicates()
     # df = pd.read_json('chatbot_arena_02-15-2024.json', lines=True).drop_duplicates()
-    df = pd.read_json('chatbot_arena_03-15-2024.json', lines=True).drop_duplicates()
+    # df = pd.read_json('chatbot_arena_03-15-2024.json', lines=True).drop_duplicates()
+    df = pd.read_json('chatbot_arena_05-08-2024.json', lines=True).drop_duplicates()
+
     print(f'total matchups: {len(df)}')
 
     draw_rate = (df['outcome'] == 0.5).mean()
