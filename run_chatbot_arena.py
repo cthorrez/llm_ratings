@@ -17,7 +17,9 @@ if __name__ == '__main__':
     # df = pd.read_json('chatbot_arena_01-26-2024.json', lines=True).drop_duplicates()
     # df = pd.read_json('chatbot_arena_02-15-2024.json', lines=True).drop_duplicates()
     # df = pd.read_json('chatbot_arena_03-15-2024.json', lines=True).drop_duplicates()
-    df = pd.read_json('chatbot_arena_05-08-2024.json', lines=True).drop_duplicates()
+    # df = pd.read_json('chatbot_arena_05-08-2024.json', lines=True).drop_duplicates()
+    df = pd.read_json('chatbot_arena_08-14-2024.json', lines=True).drop_duplicates()
+
 
     print(f'total matchups: {len(df)}')
 
@@ -25,7 +27,7 @@ if __name__ == '__main__':
     print(f'overall draw rate: {draw_rate}')
 
     seed = 42
-    n_splits = 20
+    n_splits = 10
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=seed)
 
 

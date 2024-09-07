@@ -62,9 +62,13 @@ if __name__ == '__main__':
         # }
     ]
     google_storage_args = [
+        # {
+        #     'url' : 'https://storage.googleapis.com/arena_external_data/public/clean_battle_20240508.json',
+        #     'date': '05-08-2024'
+        # },
         {
-            'url' : 'https://storage.googleapis.com/arena_external_data/public/clean_battle_20240508.json',
-            'date': '05-08-2024'
+            'url': 'https://storage.googleapis.com/arena_external_data/public/clean_battle_20240814_public.json',
+            'date': '08-14-2024'
         }
     ]
     for args in google_drive_args:
